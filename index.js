@@ -1,15 +1,40 @@
 require('dotenv').config()
+// file system imports
 const fs = require('node:fs')
 const path = require('node:path')
+
+// local file imports
 const deployCommands = require('./deploy-commands')
+
+// database imports
+const mongoose = require('mongoose')
+const User = require('./models/User')
+
+// discord imports
 const { Client, Collection, Events, GatewayIntentBits, REST, Routes } = require('discord.js')
-
 const client = new Client({ intents: [GatewayIntentBits.Guilds] })
-
 client.commands = new Collection()
-
 const commandsPath = path.join(__dirname, 'commands')
 const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'))
+
+// express imports
+const express = require('express');
+const cors = require('cors');
+const PORT = process.env.PORT || 8888;
+const app = express(); 
+
+// middleware
+app.use(express.json()); // for parsing application/json
+app.use(express.urlencoded({ extended: true})); // for parsing application/x-www-form-urlencoded
+app.use(cors()); // enable CORS for all routes
+
+// routes
+const AuthRoutes = require('./routes/authRoutes.js');
+app.use('/api', cors(), AuthRoutes); // use the authRoutes for all routes starting with /api (e.g. /api/login)
+
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file)
@@ -23,6 +48,11 @@ for (const file of commandFiles) {
     )
   }
 }
+
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log('DATABASE CONNECTED'))
+  .catch((e) => console.log('DB CONNECTION ERROR: ', e))
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return

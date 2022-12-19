@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="info">Hoi!</div>
+    <a id="login" style="display: none" href="">Identify Yourself</a>
+  </body>
+  <script>
+    const login = document.getElementById('login')
+    const info = document.getElementById('info')
+    const url = 'http://localhost:8888/api/login'
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.loggedIn) {
+          info.innerHTML = 'You are logged in!'
+          login.style.display = 'none'
+        } else {
+          info.innerHTML = 'You are not logged in!'
+          login.style.display = 'block'
+          login.href = data.url
+        }
+      })
+  </script>
+</html>

@@ -1,4 +1,4 @@
-require("dotenv").config();
+require('dotenv').config()
 const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder } = require('discord.js')
 const client = new Client({
   intents: [
@@ -8,15 +8,12 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
   ],
 })
+const User = require('../models/User')
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("command_name")
-    .setDescription("Command Description")
-    .addStringOption((option) =>
-    option.setName('input').setDescription('option description').setRequired(true)
-  ),
-  async execute(interaction) { 
-    // code goes here
+    .setName('setup')
+    .setDescription('Sit tight while we link your account to our database!'),
+  async execute(interaction) {
   },
-};
+}
