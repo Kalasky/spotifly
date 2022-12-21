@@ -6,12 +6,8 @@ const UserSchema = new mongoose.Schema(
     discordId: String,
     discordUsername: String,
     discordDiscriminator: String,
-    discordAvatar: String,
-    discordConnections: String,
     spotifyId: String,
-    spotifyUsername: String,
-    spotifyCountry: String,
-    spotifyPremium: Boolean,
+    spotifyFollowers: Number,
   },
   { timestamps: true }
 )
