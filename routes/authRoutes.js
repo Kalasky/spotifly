@@ -13,10 +13,15 @@ const encodeFormData = (data) => {
 router.get("/login", async (req, res) => {
   const scope = `user-modify-playback-state
       user-read-playback-state 
+      user-read-playback-position
+      user-follow-read
       user-read-currently-playing
+      user-read-recently-played
+      user-read-private
       user-library-modify
       user-library-read
       user-top-read
+      user-follow-modify
       playlist-read-private
       playlist-modify-public`;
   // redirect to spotify login page with the client id, redirect uri, and scope as query parameters
