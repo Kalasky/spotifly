@@ -29,6 +29,9 @@ router.get('/login', async (req, res) => {
       })
   )
 })
+
+let accessToken
+let refreshToken
 // this route will accept get requests at /api/logged and redirect to the client redirect uri with the access token and refresh token as query parameters
 router.get('/logged', async (req, res) => {
     const body = {
@@ -50,9 +53,16 @@ router.get('/logged', async (req, res) => {
     .then(response => response.json())
     .then(data => {
       const query = qs.stringify(data); // convert the data object to a query string
+
+      accessToken = query.split('&')[0].split('=')[1]
+      refreshToken = query.split('&')[1].split('=')[1]
+
       // redirect to client redirect uri with the access token and refresh token as query parameters
       res.redirect(`${process.env.CLIENT_REDIRECT_URI}?${query}`);
     });
   });
 
 module.exports = router
+module.exports.accessToken = accessToken
+module.exports.refreshToken = refreshToken
+

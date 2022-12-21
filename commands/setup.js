@@ -14,6 +14,5 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('setup')
     .setDescription('Sit tight while we link your account to our database!'),
-  async execute(interaction) {
-  },
+  async execute(interaction) {},
 }
