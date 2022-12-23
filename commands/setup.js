@@ -1,5 +1,5 @@
-require('dotenv').config()
-const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder } = require('discord.js')
+require("dotenv").config()
+const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder } = require("discord.js")
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -8,38 +8,65 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
   ],
 })
-const User = require('../models/User')
+const User = require("../models/User")
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('setup')
-    .setDescription('Sit tight while we link your account to our database!')
-    .addStringOption(option => option.setName('username').setDescription('Your Spotify username')),
+    .setName("setup")
+    .setDescription(
+      "Initiate the setup process! This will add you to our database and allow you to use our bot!"
+    )
+    .addStringOption((option) => option.setName("username").setDescription("Your Spotify username.")),
   async execute(interaction) {
     // get user info
-    const spotifyId = interaction.options.getString('username')
+    const spotifyId = interaction.options.getString("username")
     const discordId = interaction.user.id
     const discordUsername = interaction.user.username
     const discordDiscriminator = interaction.user.discriminator
-    
 
     // check if user is already in database
     const user = await User.findOne({ discordId: discordId })
-    if (user) {
-      return interaction.reply({ content: 'You are already in our database!', ephemeral: true })
+
+    // update their spotifyId if they are already in the database but haven't authorized their account
+    if (user && user.accessToken === "") {
+      user.spotifyId = spotifyId
+      await user.save()
+      return interaction.reply({
+        content:
+          "Your Spotify ID has been updated!\nConfirm your Spotify identity by authorizing your account here: localhost:8888/api/login",
+        ephemeral: true,
+      })
     }
 
-    // add user to database
-    const newUser = new User({
-      discordId: discordId,
-      discordUsername: discordUsername,
-      discordDiscriminator: discordDiscriminator,
-      spotifyId: spotifyId,
-      spotifyFollowers: 0,
-    })
+    if (user === null) {
+      // add user to database
+      const newUser = new User({
+        discordId: discordId,
+        discordUsername: discordUsername,
+        discordDiscriminator: discordDiscriminator,
+        spotifyId: spotifyId,
+        spotifyFollowers: 0,
+        isPremium: false,
+        authorized: false,
+        accessToken: "",
+        refreshToken: "",
+      })
 
-    await newUser.save()
+      await newUser.save()
 
-    interaction.reply({ content: 'You have been added to our database!', ephemeral: true })
+      // once user is added to database, send them a link to authorize their account
+      interaction.reply({
+        content:
+          "You have been added to our database!\nConfirm your Spotify identity by authorizing your account here: localhost:8888/api/login",
+        ephemeral: true,
+      })
+    }
+
+    if (user !== null && user.accessToken !== "") {
+      interaction.reply({
+        content: "You are already authenticated and have full access to our bot!",
+        ephemeral: true,
+      })
+    }
   },
 }

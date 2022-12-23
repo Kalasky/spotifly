@@ -21,16 +21,20 @@ const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith
 const express = require('express');
 const cors = require('cors');
 const PORT = process.env.PORT || 8888;
-const app = express(); 
+const app = express();
 
 // middleware
 app.use(express.json()); // for parsing application/json
-app.use(express.urlencoded({ extended: true})); // for parsing application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 app.use(cors()); // enable CORS for all routes
 
 // routes
 const AuthRoutes = require('./routes/authRoutes.js');
 app.use('/api', cors(), AuthRoutes); // use the authRoutes for all routes starting with /api (e.g. /api/login)
+
+app.get('/', (req, res) => {
+  res.send('You have been successfully authenticated! You can now close this window. Enjoy all the features of the Spotifly Discord bot!');
+});
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
