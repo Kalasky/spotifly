@@ -8,6 +8,10 @@ const UserSchema = new mongoose.Schema(
     discordDiscriminator: String,
     spotifyId: String,
     spotifyFollowers: Number,
+    authorized: Boolean,
+    isPremium: Boolean,
+    accessToken: String,
+    refreshToken: String,
   },
   { timestamps: true }
 )
