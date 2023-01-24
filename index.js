@@ -3,6 +3,9 @@ require('dotenv').config()
 const fs = require('node:fs')
 const path = require('node:path')
 
+// twitch imports
+const tmi = require('tmi.js')
+
 // local file imports
 const deployCommands = require('./deploy-commands')
 
@@ -18,27 +21,27 @@ const commandsPath = path.join(__dirname, 'commands')
 const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'))
 
 // express imports
-const express = require('express');
-const cors = require('cors');
-const PORT = process.env.PORT || 8888;
-const app = express();
+const express = require('express')
+const cors = require('cors')
+const PORT = process.env.PORT || 8888
+const app = express()
 
 // middleware
-app.use(express.json()); // for parsing application/json
-app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
-app.use(cors()); // enable CORS for all routes
+app.use(express.json()) // for parsing application/json
+app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+app.use(cors()) // enable CORS for all routes
 
 // routes
-const AuthRoutes = require('./routes/authRoutes.js');
-app.use('/api', cors(), AuthRoutes); // use the authRoutes for all routes starting with /api (e.g. /api/login)
+const AuthRoutes = require('./routes/authRoutes.js')
+app.use('/api', cors(), AuthRoutes) // use the authRoutes for all routes starting with /api (e.g. /api/login)
 
 app.get('/', (req, res) => {
   res.send('You have been successfully authenticated! You can now close this window. Enjoy all the features of the Spotifly Discord bot!');
 });
 
 app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
-});
+  console.log(`Server started on port ${PORT}`)
+})
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file)
@@ -47,9 +50,7 @@ for (const file of commandFiles) {
   if ('data' in command && 'execute' in command) {
     client.commands.set(command.data.name, command)
   } else {
-    console.log(
-      `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
-    )
+    console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`)
   }
 }
 
