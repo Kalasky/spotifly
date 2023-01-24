@@ -3,7 +3,8 @@ require('dotenv').config()
 const fs = require('node:fs')
 const path = require('node:path')
 const cron = require('node-cron')
-const utils = require('./utils')
+const twitchUtils = require('./utils/twitchUtils')
+const spotifyUtils = require('./utils/spotifyUtils')
 
 // twitch imports
 const tmi = require('tmi.js')
@@ -103,84 +104,23 @@ twitchClient.on('message', async (channel, tags, message, self) => {
   if (self) return
 })
 
-const createQueueReward = async () => {
-  try {
-    const res = await fetch(
-      `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}`,
-      {
-        method: 'POST',
-        headers: {
-          'Client-ID': process.env.TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${process.env.TWITCH_OAUTH_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: 'Spotfy Queue',
-          prompt: 'Submit a spotify song link to the queue!',
-          cost: 500,
-          is_enabled: true,
-          background_color: '#81b71a',
-          is_user_input_required: true,
-          is_global_cooldown_enabled: true,
-          global_cooldown_seconds: 60,
-        }),
-      }
-    )
-    const data = await res.json()
-    console.log(data)
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-const getUser = async () => {
-  try {
-    const res = await fetch(`https://api.twitch.tv/helix/users?login=${process.env.TWITCH_CHANNEL}`, {
-      method: 'GET',
-      headers: {
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        Authorization: `Bearer ${process.env.TWITCH_OAUTH_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-    })
-    const data = await res.json()
-    console.log(data)
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-const getReward = async () => {
-  try {
-    const res = await fetch(
-      `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID}`,
-      {
-        method: 'GET',
-        headers: {
-          'Client-ID': process.env.TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${process.env.TWITCH_OAUTH_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-    const data = await res.json()
-    console.log(data)
-  } catch (error) {
-    console.log(error)
-  }
-}
-
 const getNewRedemptionEvents = async () => {
+  const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
+  const twitchAccessToken = user.twitchAccessToken
+  const twitch_username = user.twitchId
+
+
   try {
     const res = await fetch(
       `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID}&status=UNFULFILLED`,
       {
         headers: {
           'Client-ID': process.env.TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${process.env.TWITCH_OAUTH_TOKEN}`,
+          Authorization: `Bearer ${twitchAccessToken}`,
         },
       }
     )
+
     const data = await res.json()
     console.log(data)
     if (data.data.length > 0) {
@@ -189,17 +129,18 @@ const getNewRedemptionEvents = async () => {
       const trackLink = 'spotify:track:' + trackId
       console.log(trackLink)
 
-      const twitchId = data.data[0].user_name
+      const twitchId = process.env.TWITCH_CHANNEL
       const id = data.data[0].id
       const user = await User.findOne({ twitchId })
-      const accessToken = user.accessToken
-      const refreshToken = user.refreshToken
+      const spotifyAccessToken = user.spotifyAccessToken
+      const spotifyRefreshToken = user.spotifyRefreshToken
       const spotify_username = user.spotifyId
-      utils.addToQueue(spotify_username, accessToken, refreshToken, trackLink)
+      spotifyUtils.addToQueue(spotify_username, spotifyAccessToken, spotifyRefreshToken, trackLink)
 
       // update reward status to fulfilled after adding to queue
-      utils.fulfillTwitchReward(
-        process.env.TWITCH_OAUTH_TOKEN,
+      twitchUtils.fulfillTwitchReward(
+        twitch_username,
+        twitchAccessToken,
         process.env.TWITCH_CLIENT_ID,
         process.env.TWITCH_BROADCASTER_ID,
         process.env.TWITCH_REWARD_ID,

@@ -11,8 +11,10 @@ const UserSchema = new mongoose.Schema(
     spotifyFollowers: Number,
     authorized: Boolean,
     isPremium: Boolean,
-    accessToken: String,
-    refreshToken: String,
+    spotifyAccessToken: String,
+    spotifyRefreshToken: String,
+    twitchAccessToken: String,
+    twitchRefreshToken: String,
   },
   { timestamps: true }
 )

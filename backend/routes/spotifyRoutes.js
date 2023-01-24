@@ -3,7 +3,7 @@ const router = express.Router()
 const qs = require('qs')
 const User = require('../models/User')
 const bcrypt = require('bcrypt')
-const utils = require('../utils')
+const utils = require('../utils/spotifyUtils')
 
 // this route will accept get requests at /api/login and redirect to the spotify login page
 router.get('/spotify/login', async (req, res) => {
@@ -21,7 +21,8 @@ router.get('/spotify/login', async (req, res) => {
       playlist-read-private
       playlist-modify-public`
   // redirect to spotify login page with the client id, redirect uri, and scope as query parameters
-  res.redirect(307,
+  res.redirect(
+    307,
     'https://accounts.spotify.com/authorize?' +
       qs.stringify({
         response_type: 'code',
@@ -34,7 +35,6 @@ router.get('/spotify/login', async (req, res) => {
 
 let accessToken
 let refreshToken
-let expires_in
 
 router.get('/spotify/callback', async (req, res) => {
   const code = req.query.code
@@ -59,9 +59,8 @@ router.get('/spotify/callback', async (req, res) => {
       // extract access token and refresh token from response
       accessToken = data.access_token
       refreshToken = data.refresh_token
-      expires_in = data.expires_in
 
-      console.log('access token: ', accessToken + '\n' + 'refresh token: ', refreshToken, '\n' + 'expires in: ', expires_in)
+      console.log('access token: ', accessToken + '\n' + 'refresh token: ', refreshToken)
 
       // make fetch request to get user info
       fetch('https://api.spotify.com/v1/me', {
@@ -72,6 +71,7 @@ router.get('/spotify/callback', async (req, res) => {
       })
         .then((response) => response.json())
         .then((data) => {
+          console.log(data)
           // extract user info from response
           const spotifyId = data.id
           const spotifyFollowers = data.followers.total
@@ -81,8 +81,8 @@ router.get('/spotify/callback', async (req, res) => {
 
           // if user is in the database and update their spotify id and followers
           if (user !== null) {
-            utils.storeAccessToken(spotifyId, accessToken)
-            utils.storeRefreshToken(spotifyId, refreshToken)
+            utils.storeSpotifyAccessToken(spotifyId, accessToken)
+            utils.storeSpotifyRefreshToken(spotifyId, refreshToken)
 
             User.findOneAndUpdate({ spotifyId: spotifyId }).then((user) => {
               if (user === null) {
@@ -97,9 +97,6 @@ router.get('/spotify/callback', async (req, res) => {
               user.spotifyFollowers = spotifyFollowers
               user.authorized = true
               user.save()
-
-              // redirect to client redirect uri with the access token and refresh token as query parameters
-              res.redirect(`${process.env.CLIENT_REDIRECT_URI}`)
             })
           } else {
             res.send('User not found. Please run the /setup discord command before logging in.')
