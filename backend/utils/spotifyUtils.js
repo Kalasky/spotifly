@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt')
-const User = require('./models/User')
+const User = require('../models/User')
 
 // this function will encode the data object into a query string for the fetch request
 const encodeFormData = (data) => {
@@ -8,26 +8,24 @@ const encodeFormData = (data) => {
     .join('&')
 }
 
-// this function will securely store the access token in the database
-const storeAccessToken = async (userId, accessToken) => {
-  await User.findOneAndUpdate(userId, { accessToken: accessToken })
+const storeSpotifyAccessToken = async (userId, spotifyAccessToken) => {
+  await User.findOneAndUpdate(userId, { spotifyAccessToken: spotifyAccessToken })
 }
 
-// this function will securely store the refresh token in the database
-const storeRefreshToken = async (userId, refreshToken) => {
-  await User.findOneAndUpdate(userId, { refreshToken: refreshToken })
+const storeSpotifyRefreshToken = async (userId, spotifyRefreshToken) => {
+  await User.findOneAndUpdate(userId, { spotifyRefreshToken: spotifyRefreshToken })
 }
 
 // verify the user's access token
-const verifyAccessToken = async (userId, accessToken) => {
-  const storedToken = await User.findOneAndUpdate(userId, accessToken)
-  const isMatch = bcrypt.compare(accessToken, storedToken)
+const verifyAccessToken = async (userId, spotifyAccessToken) => {
+  const storedToken = await User.findOneAndUpdate(userId, spotifyAccessToken)
+  const isMatch = bcrypt.compare(spotifyAccessToken, storedToken)
   return isMatch
 }
 
 // this function will generate a new access token if the user's access token has expired
-const generateAccessToken = async (userId, refreshToken) => {
-  const storedToken = await User.findOneAndUpdate(userId, refreshToken)
+const generateAccessToken = async (userId, spotifyRefreshToken) => {
+  const storedToken = await User.findOneAndUpdate(userId, spotifyRefreshToken)
 
   const newToken = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
@@ -43,13 +41,13 @@ const generateAccessToken = async (userId, refreshToken) => {
   })
     .then((res) => res.json())
     .then((data) => data.access_token)
-  await storeAccessToken(userId, newToken)
+  await storeSpotifyAccessToken(userId, newToken)
   return newToken
 }
 
 // this function will refresh the user's access token if it has expired
-const refreshAccessToken = async (userId, refreshToken) => {
-  const newToken = generateAccessToken(userId, refreshToken)
+const refreshAccessToken = async (userId, spotifyRefreshToken) => {
+  const newToken = generateAccessToken(userId, spotifyRefreshToken)
   return newToken
 }
 
@@ -126,38 +124,9 @@ const addToQueue = async (userId, accessToken, refreshToken, uri) => {
   }
 }
 
-const fulfillTwitchReward = async (accessToken, clientId, broadcaster_id, reward_id, id) => {
-  try {
-    const response = await fetch(
-      `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}&id=${id}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Client-ID': clientId,
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'FULFILLED',
-        }),
-      }
-    )
-
-    if (response.ok) {
-      console.log('Reward fulfilled!')
-    } else {
-      const json = await response.json()
-      console.log(json)
-      throw new Error('Error fulfilling reward.')
-    }
-  } catch (error) {
-    console.log(error)
-  }
-}
-
 module.exports = {
-  storeAccessToken,
-  storeRefreshToken,
+  storeSpotifyAccessToken,
+  storeSpotifyRefreshToken,
   verifyAccessToken,
   generateAccessToken,
   refreshAccessToken,
@@ -165,5 +134,4 @@ module.exports = {
   resumeSong,
   encodeFormData,
   addToQueue,
-  fulfillTwitchReward,
 }

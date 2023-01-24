@@ -49,8 +49,10 @@ module.exports = {
         spotifyFollowers: 0,
         isPremium: false,
         authorized: false,
-        accessToken: '',
-        refreshToken: '',
+        spotifyAccessToken: '',
+        spotifyRefreshToken: '',
+        twitchAccessToken: '',
+        twitchRefreshToken: '',
       })
 
       await newUser.save()
