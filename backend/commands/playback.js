@@ -46,7 +46,7 @@ module.exports = {
 
     // resume playback
     if (interaction.options.getSubcommand() === "resume") {
-      utils.resumeSong(user.spotifyId, user.spotifyAccessToken)
+      utils.resumeSong(user.spotifyId, user.spotifyAccessToken, user.spotifyRefreshToken)
       interaction.reply({
         content: "Playback has been resumed.",
         ephemeral: true,

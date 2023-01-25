@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt')
 const User = require('../models/User')
+const { sendMessage } = require('./tmiUtils')
 
 // this function will encode the data object into a query string for the fetch request
 const encodeFormData = (data) => {
@@ -36,7 +37,7 @@ const generateAccessToken = async (userId, spotifyRefreshToken) => {
     },
     body: encodeFormData({
       grant_type: 'refresh_token',
-      refresh_token: refreshToken,
+      refresh_token: spotifyRefreshToken,
     }),
   })
     .then((res) => res.json())
@@ -76,7 +77,7 @@ const pauseSong = async (userId, accessToken, refreshToken) => {
 }
 
 // this function will resume the user's currently playing song
-const resumeSong = async (userId, accessToken) => {
+const resumeSong = async (userId, accessToken, refreshToken) => {
   try {
     const response = await fetch('https://api.spotify.com/v1/me/player/play', {
       method: 'PUT',
@@ -113,6 +114,7 @@ const addToQueue = async (userId, accessToken, refreshToken, uri) => {
     }
     if (response.ok) {
       console.log('Track added to queue!')
+      sendMessage('Track added to queue!')
     } else {
       const json = await response.json()
       console.log(json)
@@ -120,7 +122,9 @@ const addToQueue = async (userId, accessToken, refreshToken, uri) => {
     }
   } catch (error) {
     console.log(error)
-    throw error
+    if (error.message === 'Error adding track to queue.') {
+      sendMessage('Invalid Spotify song link. Please try again. (Example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=32cfb1adf4b942d9)')
+    }
   }
 }
 

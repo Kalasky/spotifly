@@ -3,18 +3,15 @@ require('dotenv').config()
 const fs = require('node:fs')
 const path = require('node:path')
 const cron = require('node-cron')
-const twitchUtils = require('./utils/twitchUtils')
-const spotifyUtils = require('./utils/spotifyUtils')
 
 // twitch imports
-const tmi = require('tmi.js')
+const twitchUtils = require('./utils/twitchUtils')
 
 // local file imports
 const deployCommands = require('./deploy-commands')
 
 // database imports
 const mongoose = require('mongoose')
-const User = require('./models/User')
 
 // discord imports
 const { Client, Collection, Events, GatewayIntentBits, REST, Routes } = require('discord.js')
@@ -88,72 +85,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 })
 
-const twitchClient = new tmi.Client({
-  options: { debug: true },
-  channels: [process.env.TWITCH_CHANNEL],
-  connection: { reconnect: true },
-  identity: {
-    username: process.env.TWITCH_BOT_USERNAME,
-    password: process.env.TWITCH_BOT_TOKEN,
-  },
-})
-
-twitchClient.connect()
-
-twitchClient.on('message', async (channel, tags, message, self) => {
-  if (self) return
-})
-
-const getNewRedemptionEvents = async () => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
-  const twitchAccessToken = user.twitchAccessToken
-  const twitch_username = user.twitchId
-
-
-  try {
-    const res = await fetch(
-      `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID}&status=UNFULFILLED`,
-      {
-        headers: {
-          'Client-ID': process.env.TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${twitchAccessToken}`,
-        },
-      }
-    )
-
-    const data = await res.json()
-    console.log(data)
-    if (data.data.length > 0) {
-      const initialTrackLink = data.data[0].user_input
-      const trackId = initialTrackLink.substring(initialTrackLink.lastIndexOf('/') + 1, initialTrackLink.indexOf('?'))
-      const trackLink = 'spotify:track:' + trackId
-      console.log(trackLink)
-
-      const twitchId = process.env.TWITCH_CHANNEL
-      const id = data.data[0].id
-      const user = await User.findOne({ twitchId })
-      const spotifyAccessToken = user.spotifyAccessToken
-      const spotifyRefreshToken = user.spotifyRefreshToken
-      const spotify_username = user.spotifyId
-      spotifyUtils.addToQueue(spotify_username, spotifyAccessToken, spotifyRefreshToken, trackLink)
-
-      // update reward status to fulfilled after adding to queue
-      twitchUtils.fulfillTwitchReward(
-        twitch_username,
-        twitchAccessToken,
-        process.env.TWITCH_CLIENT_ID,
-        process.env.TWITCH_BROADCASTER_ID,
-        process.env.TWITCH_REWARD_ID,
-        id
-      )
-    }
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-cron.schedule('* * * * *', () => {
-  getNewRedemptionEvents()
+// get new redemption events every 10 seconds
+cron.schedule('*/10 * * * * *', () => {
+  twitchUtils.getNewRedemptionEvents(
+    process.env.TWITCH_CHANNEL,
+    process.env.TWITCH_CLIENT_ID,
+    process.env.TWITCH_BROADCASTER_ID,
+    process.env.TWITCH_REWARD_ID
+  )
 })
 
 // deploy global commands when bot joins a new guild
