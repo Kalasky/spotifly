@@ -17,13 +17,6 @@ const storeSpotifyRefreshToken = async (userId, spotifyRefreshToken) => {
   await User.findOneAndUpdate(userId, { spotifyRefreshToken: spotifyRefreshToken })
 }
 
-// verify the user's access token
-const verifyAccessToken = async (userId, spotifyAccessToken) => {
-  const storedToken = await User.findOneAndUpdate(userId, spotifyAccessToken)
-  const isMatch = bcrypt.compare(spotifyAccessToken, storedToken)
-  return isMatch
-}
-
 // this function will generate a new access token if the user's access token has expired
 const generateAccessToken = async (userId, spotifyRefreshToken) => {
   const storedToken = await User.findOneAndUpdate(userId, spotifyRefreshToken)
@@ -66,7 +59,7 @@ const pauseSong = async (userId, accessToken, refreshToken) => {
 
     if (response.statusText === 'Unauthorized') {
       const newToken = await refreshAccessToken(userId, refreshToken)
-      await pauseSong(userId, newToken)
+      await pauseSong(userId, newToken, refreshToken)
       console.log('New token generated and song paused.')
     }
 
@@ -88,7 +81,7 @@ const resumeSong = async (userId, accessToken, refreshToken) => {
 
     if (response.statusText === 'Unauthorized') {
       const newToken = await refreshAccessToken(userId, refreshToken)
-      await resumeSong(userId, newToken)
+      await resumeSong(userId, newToken, refreshToken)
       console.log('New token generated and song resumed.')
     }
     return response
@@ -109,12 +102,12 @@ const addToQueue = async (userId, accessToken, refreshToken, uri) => {
     })
     if (response.status === 401) {
       const newToken = await refreshAccessToken(userId, refreshToken)
-      response = await addToQueue(userId, newToken, uri)
+      await addToQueue(userId, newToken, refreshToken, uri)
       console.log('New token generated and added to queue.')
     }
     if (response.ok) {
       console.log('Track added to queue!')
-      sendMessage('Track added to queue!')
+      sendMessage('Track successfully added to queue!')
     } else {
       const json = await response.json()
       console.log(json)
@@ -131,7 +124,6 @@ const addToQueue = async (userId, accessToken, refreshToken, uri) => {
 module.exports = {
   storeSpotifyAccessToken,
   storeSpotifyRefreshToken,
-  verifyAccessToken,
   generateAccessToken,
   refreshAccessToken,
   pauseSong,

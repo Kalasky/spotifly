@@ -18,17 +18,8 @@ const storeTwitchRefreshToken = async (userId, twitchRefreshToken) => {
   await User.findOneAndUpdate(userId, { twitchRefreshToken: twitchRefreshToken })
 }
 
-// verify the user's access token
-const verifyAccessToken = async (userId, twitchAccessToken) => {
-  const storedToken = await User.findOneAndUpdate(userId, twitchAccessToken)
-  const isMatch = bcrypt.compare(twitchAccessToken, storedToken)
-  return isMatch
-}
-
 // this function will generate a new access token if the user's access token has expired
 const generateAccessToken = async (userId, twitchRefreshToken) => {
-  const storedToken = await User.findOneAndUpdate(userId, twitchRefreshToken)
-
   const newToken = await fetch('https://id.twitch.tv/oauth2/token', {
     method: 'POST',
     headers: {
@@ -54,7 +45,7 @@ const refreshAccessToken = async (userId, twitchRefreshToken) => {
 }
 
 // --------------------- FULFILL TWITCH REWARD FROM QUEUE ---------------------
-const fulfillTwitchReward = async (twitch_username, accessToken, clientId, broadcaster_id, reward_id, id) => {
+const fulfillTwitchReward = async (twitch_username, accessToken, refreshToken, clientId, broadcaster_id, reward_id, id) => {
   try {
     const response = await fetch(
       `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}&id=${id}`,
@@ -73,7 +64,7 @@ const fulfillTwitchReward = async (twitch_username, accessToken, clientId, broad
 
     if (response.status === 401) {
       const newToken = await refreshAccessToken(twitch_username, refreshToken)
-      response = await fulfillTwitchReward(twitch_username, newToken, clientId, broadcaster_id, reward_id, id)
+      await fulfillTwitchReward(twitch_username, newToken, refreshToken, clientId, broadcaster_id, reward_id, id)
       console.log('New token generated and added to queue.')
     }
 
@@ -90,7 +81,7 @@ const fulfillTwitchReward = async (twitch_username, accessToken, clientId, broad
 }
 
 // --------------------- GET TWITCH USER ---------------------
-const getUser = async (twitch_username, clientId, accessToken) => {
+const getUser = async (twitch_username, clientId, accessToken, refreshToken) => {
   try {
     const res = await fetch(`https://api.twitch.tv/helix/users?login=${twitch_username}`, {
       method: 'GET',
@@ -105,7 +96,7 @@ const getUser = async (twitch_username, clientId, accessToken) => {
 
     if (res.status === 401) {
       const newToken = await refreshAccessToken(twitch_username, refreshToken)
-      data = await getUser(twitch_username, clientId, newToken)
+      await getUser(twitch_username, clientId, newToken, refreshToken)
       console.log('New token generated and getUser executed.')
     }
   } catch (error) {
@@ -114,7 +105,10 @@ const getUser = async (twitch_username, clientId, accessToken) => {
 }
 
 // --------------------- GET CHANNEL REWARD ---------------------
-const getReward = async (twitch_username, broadcaster_id, clientId, accessToken, reward_id) => {
+const getReward = async (twitch_username, broadcaster_id, clientId, reward_id) => {
+  const user = await User.findOne({ twitchId: twitch_username })
+  const twitchAccessToken = user.twitchAccessToken
+  const twitchRefreshToken = user.twitchRefreshToken
   try {
     const res = await fetch(
       `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}`,
@@ -122,7 +116,7 @@ const getReward = async (twitch_username, broadcaster_id, clientId, accessToken,
         method: 'GET',
         headers: {
           'Client-ID': clientId,
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${twitchAccessToken}`,
           'Content-Type': 'application/json',
         },
       }
@@ -131,8 +125,8 @@ const getReward = async (twitch_username, broadcaster_id, clientId, accessToken,
     console.log(data)
 
     if (res.status === 401) {
-      const newToken = await refreshAccessToken(twitch_username, refreshToken)
-      data = await getReward(twitch_username, broadcaster_id, newToken, clientId, reward_id)
+      const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
+      await getReward(twitch_username, broadcaster_id, clientId, reward_id)
       console.log('New token generated and getReward executed.')
     }
   } catch (error) {
@@ -141,11 +135,10 @@ const getReward = async (twitch_username, broadcaster_id, clientId, accessToken,
 }
 
 // --------------------- CREATE CHANNEL REWARD ---------------------\
-const createQueueReward = async (
+const createReward = async (
   twitch_username,
   broadcaster_id,
   clientId,
-  accessToken,
   title,
   prompt,
   cost,
@@ -154,12 +147,15 @@ const createQueueReward = async (
   is_global_cooldown_enabled,
   global_cooldown_seconds
 ) => {
+  const user = await User.findOne({ twitchId: twitch_username })
+  const twitchAccessToken = user.twitchAccessToken
+  const twitchRefreshToken = user.twitchRefreshToken
   try {
     const res = await fetch(`https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcaster_id}`, {
       method: 'POST',
       headers: {
         'Client-ID': clientId,
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${twitchAccessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -176,11 +172,11 @@ const createQueueReward = async (
     const data = await res.json()
     console.log(data)
     if (res.status === 401) {
-      const newToken = await refreshAccessToken(twitch_username, refreshToken)
-      data = await createQueueReward(
+      console.log('Access token expired. Generating new token (createReward)...')
+      const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
+      await createReward(
         twitch_username,
         broadcaster_id,
-        newToken,
         clientId,
         title,
         prompt,
@@ -190,7 +186,7 @@ const createQueueReward = async (
         is_global_cooldown_enabled,
         global_cooldown_seconds
       )
-      console.log('New token generated and createQueueReward executed.')
+      console.log('New token generated and createReward executed.')        
     }
   } catch (error) {
     console.error(error)
@@ -217,9 +213,9 @@ const getNewRedemptionEvents = async (twitch_username, clientId, broadcaster_id,
     console.log(data)
 
     if (res.status === 401) {
-      console.log('Token expired. Generating new token...')
+      console.log('Token expired. Generating new token (getNewRedemptionEvents)...')
       const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
-      await getNewRedemptionEvents(twitch_username, clientId, newToken, broadcaster_id, reward_id)
+      await getNewRedemptionEvents(twitch_username, clientId, broadcaster_id, reward_id)
       console.log('New token generated and getNewRedemptionEvents executed.')
     }
 
@@ -234,23 +230,22 @@ const getNewRedemptionEvents = async (twitch_username, clientId, broadcaster_id,
       const spotifyRefreshToken = user.spotifyRefreshToken
 
       addToQueue(spotify_username, spotifyAccessToken, spotifyRefreshToken, trackLink)
-      fulfillTwitchReward(twitch_username, twitchAccessToken, clientId, broadcaster_id, reward_id, data.data[0].id)
+      fulfillTwitchReward(twitch_username, twitchAccessToken, twitchRefreshToken, clientId, broadcaster_id, reward_id, data.data[0].id)
       console.log('Track added to queue and reward fulfilled.')
     }
   } catch (error) {
-    console.log('ddd',error)
+    console.log('ddd', error)
   }
 }
 
 module.exports = {
   storeTwitchAccessToken,
   storeTwitchRefreshToken,
-  verifyAccessToken,
   generateAccessToken,
   refreshAccessToken,
   fulfillTwitchReward,
   getUser,
   getReward,
-  createQueueReward,
+  createReward,
   getNewRedemptionEvents,
 }

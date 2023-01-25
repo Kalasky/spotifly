@@ -5,7 +5,8 @@ const User = require('../models/User')
 const utils = require('../utils/twitchUtils')
 
 router.get('/twitch/login', async (req, res) => {
-  const scope = 'channel:manage:redemptions'
+  const scope =
+    'channel:manage:redemptions channel:read:redemptions channel:manage:vips chat:edit chat:read'
 
   res.redirect(
     307,
@@ -43,7 +44,6 @@ router.get('/twitch/callback', async (req, res) => {
   const tokenData = await tokenResponse.json()
   accessToken = tokenData.access_token
   refreshToken = tokenData.refresh_token
-
 
   const userResponse = await fetch('https://api.twitch.tv/helix/users', {
     method: 'GET',
