@@ -1,4 +1,14 @@
+const bcrypt = require('bcrypt')
 const User = require('../models/User')
+const { addToQueue } = require('./spotifyUtils')
+const { sendMessage } = require('./tmiUtils')
+
+// this function will encode the data object into a query string for the fetch request
+const encodeFormData = (data) => {
+  return Object.keys(data)
+    .map((key) => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
+    .join('&')
+}
 
 const storeTwitchAccessToken = async (userId, twitchAccessToken) => {
   await User.findOneAndUpdate(userId, { twitchAccessToken: twitchAccessToken })
@@ -19,21 +29,21 @@ const verifyAccessToken = async (userId, twitchAccessToken) => {
 const generateAccessToken = async (userId, twitchRefreshToken) => {
   const storedToken = await User.findOneAndUpdate(userId, twitchRefreshToken)
 
-  const newToken = await fetch('https://accounts.twitch.com/api/token', {
+  const newToken = await fetch('https://id.twitch.tv/oauth2/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization:
-        'Basic ' + Buffer.from(process.env.TWITCH_CLIENT_ID + ':' + process.env.TWITCH_CLIENT_SECRET).toString('base64'),
     },
     body: encodeFormData({
       grant_type: 'refresh_token',
-      refresh_token: refreshToken,
+      refresh_token: twitchRefreshToken,
+      client_id: process.env.TWITCH_CLIENT_ID,
+      client_secret: process.env.TWITCH_CLIENT_SECRET,
     }),
   })
     .then((res) => res.json())
     .then((data) => data.access_token)
-  await storeAccessToken(userId, newToken)
+  await storeTwitchAccessToken(userId, newToken)
   return newToken
 }
 
@@ -187,6 +197,51 @@ const createQueueReward = async (
   }
 }
 
+const getNewRedemptionEvents = async (twitch_username, clientId, broadcaster_id, reward_id) => {
+  const user = await User.findOne({ twitchId: twitch_username })
+  const twitchAccessToken = user.twitchAccessToken
+  const twitchRefreshToken = user.twitchRefreshToken
+  try {
+    const res = await fetch(
+      `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}&status=UNFULFILLED`,
+      {
+        method: 'GET',
+        headers: {
+          'Client-ID': clientId,
+          Authorization: `Bearer ${twitchAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    const data = await res.json()
+    console.log(data)
+
+    if (res.status === 401) {
+      console.log('Token expired. Generating new token...')
+      const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
+      await getNewRedemptionEvents(twitch_username, clientId, newToken, broadcaster_id, reward_id)
+      console.log('New token generated and getNewRedemptionEvents executed.')
+    }
+
+    if (data.data.length > 0) {
+      const initialTrackLink = data.data[0].user_input
+      const trackId = initialTrackLink.substring(initialTrackLink.lastIndexOf('/') + 1, initialTrackLink.indexOf('?'))
+      const trackLink = 'spotify:track:' + trackId
+      console.log(trackLink)
+
+      const spotify_username = user.spotifyId
+      const spotifyAccessToken = user.spotifyAccessToken
+      const spotifyRefreshToken = user.spotifyRefreshToken
+
+      addToQueue(spotify_username, spotifyAccessToken, spotifyRefreshToken, trackLink)
+      fulfillTwitchReward(twitch_username, twitchAccessToken, clientId, broadcaster_id, reward_id, data.data[0].id)
+      console.log('Track added to queue and reward fulfilled.')
+    }
+  } catch (error) {
+    console.log('ddd',error)
+  }
+}
+
 module.exports = {
   storeTwitchAccessToken,
   storeTwitchRefreshToken,
@@ -197,4 +252,5 @@ module.exports = {
   getUser,
   getReward,
   createQueueReward,
+  getNewRedemptionEvents,
 }
