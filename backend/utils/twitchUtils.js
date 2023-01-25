@@ -221,15 +221,15 @@ const getNewRedemptionEvents = async (twitch_username, clientId, broadcaster_id,
 
     if (data.data.length > 0) {
       const initialTrackLink = data.data[0].user_input
-      const trackId = initialTrackLink.substring(initialTrackLink.lastIndexOf('/') + 1, initialTrackLink.indexOf('?'))
-      const trackLink = 'spotify:track:' + trackId
-      console.log(trackLink)
+      var newLink = initialTrackLink.replace('https://open.spotify.com/track/', 'spotify:track:')
+      var trackId = newLink.substring(0, newLink.indexOf('?'))
+      console.log(trackId)
 
       const spotify_username = user.spotifyId
       const spotifyAccessToken = user.spotifyAccessToken
       const spotifyRefreshToken = user.spotifyRefreshToken
 
-      addToQueue(spotify_username, spotifyAccessToken, spotifyRefreshToken, trackLink)
+      addToQueue(spotify_username, spotifyAccessToken, spotifyRefreshToken, trackId)
       fulfillTwitchReward(twitch_username, twitchAccessToken, twitchRefreshToken, clientId, broadcaster_id, reward_id, data.data[0].id)
       console.log('Track added to queue and reward fulfilled.')
     }

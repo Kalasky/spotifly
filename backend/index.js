@@ -106,7 +106,6 @@ const textCreation3 = async () => {
     }
   )
   const data = await res.json()
-  console.log('test creation3', data)
   if (data.data.length > 0) {
     const username = data.data[0].user_login
 
@@ -118,7 +117,7 @@ const textCreation3 = async () => {
         sendMessage(`@${username} has won the 0.07 chance to become a VIP!`)
         break
       case chance <= banChance:
-        sendMessage(`@${username} has earned themselves a 24 hour ban!`)
+        sendMessage(`@${username} has earned themselves a 1 hour ban!`)
         break
       case chance <= timedOutChance:
         sendMessage(`@${username} has earned themselves a timeout of 30 minutes!`)
