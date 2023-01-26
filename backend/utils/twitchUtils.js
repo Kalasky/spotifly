@@ -210,7 +210,6 @@ const getNewRedemptionEvents = async (twitch_username, clientId, broadcaster_id,
       }
     )
     const data = await res.json()
-    console.log(data)
 
     if (res.status === 401) {
       console.log('Token expired. Generating new token (getNewRedemptionEvents)...')
@@ -234,7 +233,7 @@ const getNewRedemptionEvents = async (twitch_username, clientId, broadcaster_id,
       console.log('Track added to queue and reward fulfilled.')
     }
   } catch (error) {
-    console.log('ddd', error)
+    console.log(error)
   }
 }
 

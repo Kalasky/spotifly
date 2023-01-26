@@ -95,48 +95,52 @@ const textCreation3 = async () => {
   const timedOutChance = 0.08
 
   const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
-  const res = await fetch(
-    `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=68f6ed85-0cb1-4498-a360-d11f95f1caea&status=UNFULFILLED`,
-    {
-      method: 'GET',
-      headers: {
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        Authorization: `Bearer ${user.twitchAccessToken}`,
-      },
-    }
-  )
-  const data = await res.json()
-  if (data.data.length > 0) {
-    const username = data.data[0].user_login
-
-    switch (true) {
-      case chance <= modChance:
-        sendMessage(`@${username} has won the 0.05 chance to become a moderator for the channel!`)
-        break
-      case chance <= vipChance:
-        sendMessage(`@${username} has won the 0.07 chance to become a VIP!`)
-        break
-      case chance <= banChance:
-        sendMessage(`@${username} has earned themselves a 1 hour ban!`)
-        break
-      case chance <= timedOutChance:
-        sendMessage(`@${username} has earned themselves a timeout of 30 minutes!`)
-        break
-      default:
-        sendMessage(`@${username} None of the chances were met, try again!`)
-        break
-    }
-
-    // update the status of the redemption to fulfilled
-    twitchUtils.fulfillTwitchReward(
-      process.env.TWITCH_CHANNEL,
-      user.twitchAccessToken,
-      user.twitchRefreshToken,
-      process.env.TWITCH_CLIENT_ID,
-      process.env.TWITCH_BROADCASTER_ID,
-      '68f6ed85-0cb1-4498-a360-d11f95f1caea',
-      data.data[0].id
+  try {
+    const res = await fetch(
+      `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=68f6ed85-0cb1-4498-a360-d11f95f1caea&status=UNFULFILLED`,
+      {
+        method: 'GET',
+        headers: {
+          'Client-ID': process.env.TWITCH_CLIENT_ID,
+          Authorization: `Bearer ${user.twitchAccessToken}`,
+        },
+      }
     )
+    const data = await res.json()
+    if (data.data.length > 0) {
+      const username = data.data[0].user_login
+
+      switch (true) {
+        case chance <= modChance:
+          sendMessage(`@${username} has won the 0.05 chance to become a moderator for the channel!`)
+          break
+        case chance <= vipChance:
+          sendMessage(`@${username} has won the 0.07 chance to become a VIP!`)
+          break
+        case chance <= banChance:
+          sendMessage(`@${username} has earned themselves a 1 hour ban!`)
+          break
+        case chance <= timedOutChance:
+          sendMessage(`@${username} has earned themselves a timeout of 30 minutes!`)
+          break
+        default:
+          console.log('None of the chances were met, try again!')
+          break
+      }
+
+      // update the status of the redemption to fulfilled
+      twitchUtils.fulfillTwitchReward(
+        process.env.TWITCH_CHANNEL,
+        user.twitchAccessToken,
+        user.twitchRefreshToken,
+        process.env.TWITCH_CLIENT_ID,
+        process.env.TWITCH_BROADCASTER_ID,
+        '68f6ed85-0cb1-4498-a360-d11f95f1caea',
+        data.data[0].id
+      )
+    }
+  } catch (e) {
+    console.log(e)
   }
 }
 
