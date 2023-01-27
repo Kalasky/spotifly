@@ -88,11 +88,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 })
 
 const textCreation3 = async () => {
-  const chance = Math.random()
-  const modChance = 0.009
-  const vipChance = 0.006
-  const banChance = 0.02
-  const timedOutChance = 0.08
+  const chance = Math.floor(Math.random() * 40000) + 1
+  console.log(chance)
 
   const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
   try {
@@ -107,27 +104,39 @@ const textCreation3 = async () => {
       }
     )
     const data = await res.json()
+
     if (data.data.length > 0) {
       const username = data.data[0].user_login
 
       switch (true) {
-        case chance <= modChance:
-          sendMessage(`@${username} has won the 0.05 chance to become a moderator for the channel!`)
+        case chance <= 1:
+          sendMessage(`@${username} has won the 1/10000 chance to become a moderator for the channel!`)
           break
-        case chance <= vipChance:
-          sendMessage(`@${username} has won the 0.07 chance to become a VIP!`)
+        case chance <= 21:
+          sendMessage(`@${username} has won the 20/10000 chance to become a VIP!`)
           break
-        case chance <= banChance:
-          sendMessage(`@${username} has earned themselves a 1 hour ban!`)
+        case chance <= 71:
+          sendMessage(`@${username} has won the 50/10000 chance for a 1 hour timeout!`)
           break
-        case chance <= timedOutChance:
-          sendMessage(`@${username} has earned themselves a timeout of 30 minutes!`)
+        case chance <= 571:
+          sendMessage(`@${username} has won the 500/10000 chance for a 5 minute timeout!`)
+          break
+        case chance <= 771:
+          sendMessage(`@${username} has won the 200/10000 chance to be unmodded!`)
+          break
+        case chance <= 776:
+          sendMessage(`@${username} has won the 5/10000 chance for a gifted sub`)
+          break
+        case chance <= 777:
+          sendMessage(`@${username} has won the 1/10000 chance for a Tier 3 sub!`)
+          break
+        case chance <= 1277:
+          sendMessage(`@${username} has won the 500/10000 chance to add or delete a 7TV emote!`)
           break
         default:
           console.log('None of the chances were met, try again!')
           break
       }
-
       // update the status of the redemption to fulfilled
       twitchUtils.fulfillTwitchReward(
         process.env.TWITCH_CHANNEL,
@@ -144,12 +153,12 @@ const textCreation3 = async () => {
   }
 }
 
-cron.schedule('*/10 * * * * *', () => {
-  textCreation3()
-})
+// cron.schedule('*/2 * * * * *', () => {
+//   textCreation3()
+// })
 
 // get new redemption events every 10 seconds
-cron.schedule('*/10 * * * * *', () => {
+cron.schedule('*/2 * * * * *', () => {
   twitchUtils.getNewRedemptionEvents(
     process.env.TWITCH_CHANNEL,
     process.env.TWITCH_CLIENT_ID,
