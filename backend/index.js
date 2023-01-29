@@ -34,9 +34,8 @@ app.use(cors()) // enable CORS for all routes
 // routes
 const spotifyRoutes = require('./routes/spotifyRoutes.js')
 const twitchRoutes = require('./routes/twitchRoutes.js')
-const User = require('./models/User')
-const { sendMessage } = require('./utils/tmiUtils')
-app.use('/api', cors(), twitchRoutes)
+app.use(express.raw({ type: 'application/json' }))
+app.use('/api', cors(), express.raw({ type: 'application/json' }), twitchRoutes)
 app.use('/api', cors(), spotifyRoutes)
 
 app.get('/', (req, res) => {
@@ -86,86 +85,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
     })
   }
 })
+// uncomment to create your own eventsub subscription
+// make sure you have the correct env variables set
+// twitchUtils.createEventSub(
+//   process.env.TWITCH_CLIENT_ID,
+//   process.env.APP_ACCESS_TOKEN,
+//   process.env.TWITCH_BROADCASTER_ID,
+//   process.env.TWITCH_REWARD_ID_TC3,
+//   process.env.NGROK_TUNNEL_URL,
+//   process.env.TWITCH_WEBHOOK_SECRET
+// )
 
-const textCreation3 = async () => {
-  const chance = Math.floor(Math.random() * 40000) + 1
-  console.log(chance)
-
-  const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
-  try {
-    const res = await fetch(
-      `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=68f6ed85-0cb1-4498-a360-d11f95f1caea&status=UNFULFILLED`,
-      {
-        method: 'GET',
-        headers: {
-          'Client-ID': process.env.TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${user.twitchAccessToken}`,
-        },
-      }
-    )
-    const data = await res.json()
-
-    if (data.data.length > 0) {
-      const username = data.data[0].user_login
-
-      switch (true) {
-        case chance <= 1:
-          sendMessage(`@${username} has won the 1/10000 chance to become a moderator for the channel!`)
-          break
-        case chance <= 21:
-          sendMessage(`@${username} has won the 20/10000 chance to become a VIP!`)
-          break
-        case chance <= 71:
-          sendMessage(`@${username} has won the 50/10000 chance for a 1 hour timeout!`)
-          break
-        case chance <= 571:
-          sendMessage(`@${username} has won the 500/10000 chance for a 5 minute timeout!`)
-          break
-        case chance <= 771:
-          sendMessage(`@${username} has won the 200/10000 chance to be unmodded!`)
-          break
-        case chance <= 776:
-          sendMessage(`@${username} has won the 5/10000 chance for a gifted sub`)
-          break
-        case chance <= 777:
-          sendMessage(`@${username} has won the 1/10000 chance for a Tier 3 sub!`)
-          break
-        case chance <= 1277:
-          sendMessage(`@${username} has won the 500/10000 chance to add or delete a 7TV emote!`)
-          break
-        default:
-          console.log('None of the chances were met, try again!')
-          break
-      }
-      // update the status of the redemption to fulfilled
-      twitchUtils.fulfillTwitchReward(
-        process.env.TWITCH_CHANNEL,
-        user.twitchAccessToken,
-        user.twitchRefreshToken,
-        process.env.TWITCH_CLIENT_ID,
-        process.env.TWITCH_BROADCASTER_ID,
-        '68f6ed85-0cb1-4498-a360-d11f95f1caea',
-        data.data[0].id
-      )
-    }
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-// cron.schedule('*/2 * * * * *', () => {
-//   textCreation3()
-// })
-
-// get new redemption events every 10 seconds
-cron.schedule('*/2 * * * * *', () => {
-  twitchUtils.getNewRedemptionEvents(
-    process.env.TWITCH_CHANNEL,
-    process.env.TWITCH_CLIENT_ID,
-    process.env.TWITCH_BROADCASTER_ID,
-    process.env.TWITCH_REWARD_ID
-  )
-})
+twitchUtils.eventSubList(process.env.TWITCH_CLIENT_ID, process.env.APP_ACCESS_TOKEN)
 
 // deploy global commands when bot joins a new guild
 client.on(Events.GuildCreate, () => {
