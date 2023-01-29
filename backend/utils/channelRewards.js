@@ -54,7 +54,44 @@ const testCreation3 = async () => {
   }
 }
 
-module.exports = {
-  testCreation3,
+const incrementCost = async () => {
+  const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
+  try {
+    const getReward = await fetch(
+      `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&id=${process.env.TWITCH_REWARD_ID_PENNY}`,
+      {
+        method: 'GET',
+        headers: {
+          'Client-ID': process.env.TWITCH_CLIENT_ID,
+          Authorization: `Bearer ${user.twitchAccessToken}`,
+        },
+      }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        let cost = data.data[0].cost
+
+        fetch(
+          `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&id=${process.env.TWITCH_REWARD_ID_PENNY}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Client-ID': process.env.TWITCH_CLIENT_ID,
+              Authorization: `Bearer ${user.twitchAccessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              cost: cost + 1,
+            }),
+          }
+        )
+      })
+  } catch (e) {
+    console.log(e)
+  }
 }
 
+module.exports = {
+  testCreation3,
+  incrementCost,
+}
