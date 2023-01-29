@@ -105,7 +105,7 @@ const getUser = async (twitch_username, clientId, accessToken, refreshToken) => 
 }
 
 // --------------------- GET CHANNEL REWARD ---------------------
-const getReward = async (twitch_username, broadcaster_id, clientId, reward_id) => {
+const getSpecificReward = async (twitch_username, broadcaster_id, clientId, reward_id) => {
   const user = await User.findOne({ twitchId: twitch_username })
   const twitchAccessToken = user.twitchAccessToken
   const twitchRefreshToken = user.twitchRefreshToken
@@ -128,6 +128,33 @@ const getReward = async (twitch_username, broadcaster_id, clientId, reward_id) =
       const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
       await getReward(twitch_username, broadcaster_id, clientId, reward_id)
       console.log('New token generated and getReward executed.')
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const getAllRewards = async (twitch_username, broadcaster_id, clientId) => {
+  const user = await User.findOne({ twitchId: twitch_username })
+  const twitchAccessToken = user.twitchAccessToken
+  const twitchRefreshToken = user.twitchRefreshToken
+
+  try {
+    const res = await fetch(`https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcaster_id}`, {
+      method: 'GET',
+      headers: {
+        'Client-ID': clientId,
+        Authorization: `Bearer ${twitchAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = await res.json()
+    console.log(data)
+
+    if (res.status === 401) {
+      const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
+      await getAllRewards(twitch_username, broadcaster_id, clientId)
+      console.log('New token generated and getAllRewards executed.')
     }
   } catch (error) {
     console.log(error)
@@ -186,7 +213,7 @@ const createReward = async (
         is_global_cooldown_enabled,
         global_cooldown_seconds
       )
-      console.log('New token generated and createReward executed.')        
+      console.log('New token generated and createReward executed.')
     }
   } catch (error) {
     console.error(error)
@@ -229,12 +256,75 @@ const getNewRedemptionEvents = async (twitch_username, clientId, broadcaster_id,
       const spotifyRefreshToken = user.spotifyRefreshToken
 
       addToQueue(spotify_username, spotifyAccessToken, spotifyRefreshToken, trackId)
-      fulfillTwitchReward(twitch_username, twitchAccessToken, twitchRefreshToken, clientId, broadcaster_id, reward_id, data.data[0].id)
+      fulfillTwitchReward(
+        twitch_username,
+        twitchAccessToken,
+        twitchRefreshToken,
+        clientId,
+        broadcaster_id,
+        reward_id,
+        data.data[0].id
+      )
       console.log('Track added to queue and reward fulfilled.')
     }
   } catch (error) {
     console.log(error)
   }
+}
+
+const createEventSub = async (clientId, app_access_token, broadcaster_id, reward_id, ngrok_tunnel_url, webook_secret) => {
+  const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+    method: 'POST',
+    headers: {
+      'Client-ID': clientId,
+      Authorization: `Bearer ${app_access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      type: 'channel.channel_points_custom_reward_redemption.add',
+      version: '1',
+      condition: {
+        broadcaster_user_id: broadcaster_id,
+        reward_id: reward_id,
+      },
+      transport: {
+        method: 'webhook',
+        callback: ngrok_tunnel_url + '/api/twitch/eventsub',
+        secret: webook_secret,
+      },
+    }),
+  })
+  const data = await res.json()
+  console.log(data.data)
+}
+
+const deleteEventSub = async (clientId, app_access_token, subscription_id) => {
+  const res = await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${subscription_id}`, {
+    method: 'DELETE',
+    headers: {
+      'Client-ID': clientId,
+      Authorization: `Bearer ${app_access_token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+const eventSubList = async (clientId, app_access_token) => {
+  const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled', {
+    method: 'GET',
+    headers: {
+      'Client-ID': clientId,
+      Authorization: `Bearer ${app_access_token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+  const data = await res.json()
+  console.log(data)
+  // Uncomment to delete all eventSubs
+  // for (let i = 0; i < data.data.length; i++) {
+  //   console.log(data.data[i].id)
+  //   deleteEventSub(clientId, app_access_token, data.data[i].id)
+  // }
 }
 
 module.exports = {
@@ -244,7 +334,11 @@ module.exports = {
   refreshAccessToken,
   fulfillTwitchReward,
   getUser,
-  getReward,
+  getSpecificReward,
+  getAllRewards,
   createReward,
   getNewRedemptionEvents,
+  createEventSub,
+  eventSubList,
+  deleteEventSub,
 }
