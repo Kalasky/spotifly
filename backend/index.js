@@ -85,18 +85,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
     })
   }
 })
+
 // uncomment to create your own eventsub subscription
 // make sure you have the correct env variables set
 // twitchUtils.createEventSub(
 //   process.env.TWITCH_CLIENT_ID,
 //   process.env.APP_ACCESS_TOKEN,
 //   process.env.TWITCH_BROADCASTER_ID,
-//   process.env.TWITCH_REWARD_ID_TC3,
+//   process.env.TWITCH_REWARD_ID_PENNY,
 //   process.env.NGROK_TUNNEL_URL,
 //   process.env.TWITCH_WEBHOOK_SECRET
 // )
-
-twitchUtils.eventSubList(process.env.TWITCH_CLIENT_ID, process.env.APP_ACCESS_TOKEN)
 
 // deploy global commands when bot joins a new guild
 client.on(Events.GuildCreate, () => {

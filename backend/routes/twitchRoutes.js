@@ -55,6 +55,12 @@ router.post('/twitch/eventsub', async (req, res) => {
         channelRewards.testCreation3()
         res.sendStatus(204)
       }
+      if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_PENNY) {
+        console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
+        // run the incrementCost function from channelRewards Utils
+        channelRewards.incrementCost()
+        res.sendStatus(204)
+      }
     } else if (MESSAGE_TYPE_VERIFICATION === req.headers[MESSAGE_TYPE]) {
       res.status(200).send(notification.challenge)
     } else if (MESSAGE_TYPE_REVOCATION === req.headers[MESSAGE_TYPE]) {
