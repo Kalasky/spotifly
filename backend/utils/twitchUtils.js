@@ -309,6 +309,25 @@ const deleteEventSub = async (clientId, app_access_token, subscription_id) => {
   })
 }
 
+// do this after EVERY stream
+const dumpEventSubs = async (clientId, app_access_token) => {
+  const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled', {
+    method: 'GET',
+    headers: {
+      'Client-ID': clientId,
+      Authorization: `Bearer ${app_access_token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+  const data = await res.json()
+
+  for (let i = 0; i < data.data.length; i++) {
+    console.log(data.data[i].id)
+    deleteEventSub(clientId, app_access_token, data.data[i].id)
+  }
+}
+
+
 const eventSubList = async (clientId, app_access_token) => {
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled', {
     method: 'GET',
@@ -320,11 +339,6 @@ const eventSubList = async (clientId, app_access_token) => {
   })
   const data = await res.json()
   console.log(data)
-  // Uncomment to delete all eventSubs
-  // for (let i = 0; i < data.data.length; i++) {
-  //   console.log(data.data[i].id)
-  //   deleteEventSub(clientId, app_access_token, data.data[i].id)
-  // }
 }
 
 module.exports = {
@@ -341,4 +355,5 @@ module.exports = {
   createEventSub,
   eventSubList,
   deleteEventSub,
+  dumpEventSubs,
 }

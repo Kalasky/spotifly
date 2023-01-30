@@ -45,7 +45,7 @@ router.post('/twitch/eventsub', async (req, res) => {
           process.env.TWITCH_CHANNEL,
           process.env.TWITCH_CLIENT_ID,
           process.env.TWITCH_BROADCASTER_ID,
-          process.env.TWITCH_REWARD_ID
+          process.env.TWITCH_REWARD_ID_SPOTIFY
         )
         res.sendStatus(204)
       }
