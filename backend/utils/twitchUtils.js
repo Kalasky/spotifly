@@ -1,7 +1,4 @@
-const bcrypt = require('bcrypt')
 const User = require('../models/User')
-const { addToQueue } = require('./spotifyUtils')
-const { sendMessage } = require('./tmiUtils')
 
 // this function will encode the data object into a query string for the fetch request
 const encodeFormData = (data) => {
@@ -220,58 +217,6 @@ const createReward = async (
   }
 }
 
-const getNewRedemptionEvents = async (twitch_username, clientId, broadcaster_id, reward_id) => {
-  const user = await User.findOne({ twitchId: twitch_username })
-  const twitchAccessToken = user.twitchAccessToken
-  const twitchRefreshToken = user.twitchRefreshToken
-  try {
-    const res = await fetch(
-      `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}&status=UNFULFILLED`,
-      {
-        method: 'GET',
-        headers: {
-          'Client-ID': clientId,
-          Authorization: `Bearer ${twitchAccessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-    const data = await res.json()
-
-    if (res.status === 401) {
-      console.log('Token expired. Generating new token (getNewRedemptionEvents)...')
-      const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
-      await getNewRedemptionEvents(twitch_username, clientId, broadcaster_id, reward_id)
-      console.log('New token generated and getNewRedemptionEvents executed.')
-    }
-
-    if (data.data.length > 0) {
-      const initialTrackLink = data.data[0].user_input
-      var newLink = initialTrackLink.replace('https://open.spotify.com/track/', 'spotify:track:')
-      var trackId = newLink.substring(0, newLink.indexOf('?'))
-      console.log(trackId)
-
-      const spotify_username = user.spotifyId
-      const spotifyAccessToken = user.spotifyAccessToken
-      const spotifyRefreshToken = user.spotifyRefreshToken
-
-      addToQueue(spotify_username, spotifyAccessToken, spotifyRefreshToken, trackId)
-      fulfillTwitchReward(
-        twitch_username,
-        twitchAccessToken,
-        twitchRefreshToken,
-        clientId,
-        broadcaster_id,
-        reward_id,
-        data.data[0].id
-      )
-      console.log('Track added to queue and reward fulfilled.')
-    }
-  } catch (error) {
-    console.log(error)
-  }
-}
-
 const createEventSub = async (clientId, app_access_token, broadcaster_id, reward_id, ngrok_tunnel_url, webook_secret) => {
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
     method: 'POST',
@@ -351,7 +296,6 @@ module.exports = {
   getSpecificReward,
   getAllRewards,
   createReward,
-  getNewRedemptionEvents,
   createEventSub,
   eventSubList,
   deleteEventSub,

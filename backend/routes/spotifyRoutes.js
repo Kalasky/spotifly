@@ -55,7 +55,7 @@ router.get('/spotify/callback', async (req, res) => {
     body: utils.encodeFormData(body), // encode the data object into a query string
   })
     .then((response) => response.json())
-    .then((data) => {
+    .then(async (data) => {
       // extract access token and refresh token from response
       accessToken = data.access_token
       refreshToken = data.refresh_token
@@ -63,7 +63,7 @@ router.get('/spotify/callback', async (req, res) => {
       console.log('access token: ', accessToken + '\n' + 'refresh token: ', refreshToken)
 
       // make fetch request to get user info
-      fetch('https://api.spotify.com/v1/me', {
+      const res = await fetch('https://api.spotify.com/v1/me', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${accessToken}`,

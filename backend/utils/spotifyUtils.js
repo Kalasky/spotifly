@@ -1,5 +1,4 @@
 const bcrypt = require('bcrypt')
-const { response } = require('express')
 const User = require('../models/User')
 const { sendMessage } = require('./tmiUtils')
 
@@ -116,7 +115,7 @@ const addToQueue = async (userId, accessToken, refreshToken, uri) => {
     }
   } catch (error) {
     console.log(error)
-    if (error.message === 'Error adding track to queue.' && response.status !== 401) {
+    if (error.message === 'Error adding track to queue.' && error.status !== 401) {
       sendMessage('Invalid Spotify song link. Please try again. (Example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=32cfb1adf4b942d9)')
     }
   }

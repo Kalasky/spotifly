@@ -92,11 +92,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
 //   process.env.TWITCH_CLIENT_ID,
 //   process.env.APP_ACCESS_TOKEN,
 //   process.env.TWITCH_BROADCASTER_ID,
-//   process.env.TWITCH_REWARD_ID_TC3,
+//   process.env.TWITCH_REWARD_ID_SPOTIFY,
 //   process.env.NGROK_TUNNEL_URL,
 //   process.env.TWITCH_WEBHOOK_SECRET
 // )
 
+// uncomment to dump all eventsub subscriptions, you must do this after EVERY stream
 // twitchUtils.dumpEventSubs(process.env.TWITCH_CLIENT_ID, process.env.APP_ACCESS_TOKEN)
 
 // deploy global commands when bot joins a new guild

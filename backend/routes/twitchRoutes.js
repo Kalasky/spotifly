@@ -6,7 +6,6 @@ const utils = require('../utils/twitchUtils')
 const crypto = require('crypto')
 
 // import utils
-const twitchUtils = require('../utils/twitchUtils')
 const channelRewards = require('../utils/channelRewards')
 
 // notifaction request headers for twitch
@@ -41,7 +40,7 @@ router.post('/twitch/eventsub', async (req, res) => {
       if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_SPOTIFY) {
         console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
         // run the queue function from twitchUtils
-        twitchUtils.getNewRedemptionEvents(
+        channelRewards.addToSpotifyQueue(
           process.env.TWITCH_CHANNEL,
           process.env.TWITCH_CLIENT_ID,
           process.env.TWITCH_BROADCASTER_ID,
