@@ -1,50 +1,9 @@
 const User = require('../models/User')
 
-// this function will encode the data object into a query string for the fetch request
-const encodeFormData = (data) => {
-  return Object.keys(data)
-    .map((key) => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
-    .join('&')
-}
-
-const storeTwitchAccessToken = async (userId, twitchAccessToken) => {
-  await User.findOneAndUpdate(userId, { twitchAccessToken: twitchAccessToken })
-}
-
-const storeTwitchRefreshToken = async (userId, twitchRefreshToken) => {
-  await User.findOneAndUpdate(userId, { twitchRefreshToken: twitchRefreshToken })
-}
-
-// this function will generate a new access token if the user's access token has expired
-const generateAccessToken = async (userId, twitchRefreshToken) => {
-  const newToken = await fetch('https://id.twitch.tv/oauth2/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: encodeFormData({
-      grant_type: 'refresh_token',
-      refresh_token: twitchRefreshToken,
-      client_id: process.env.TWITCH_CLIENT_ID,
-      client_secret: process.env.TWITCH_CLIENT_SECRET,
-    }),
-  })
-    .then((res) => res.json())
-    .then((data) => data.access_token)
-  await storeTwitchAccessToken(userId, newToken)
-  return newToken
-}
-
-// this function will refresh the user's access token if it has expired
-const refreshAccessToken = async (userId, twitchRefreshToken) => {
-  const newToken = generateAccessToken(userId, twitchRefreshToken)
-  return newToken
-}
-
-// --------------------- FULFILL TWITCH REWARD FROM QUEUE ---------------------
+// fulfill twitch channel reward from the redemption queue
 const fulfillTwitchReward = async (twitch_username, accessToken, refreshToken, clientId, broadcaster_id, reward_id, id) => {
   try {
-    const response = await fetch(
+    const res = await fetch(
       `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}&id=${id}`,
       {
         method: 'PATCH',
@@ -58,26 +17,13 @@ const fulfillTwitchReward = async (twitch_username, accessToken, refreshToken, c
         }),
       }
     )
-
-    if (response.status === 401) {
-      const newToken = await refreshAccessToken(twitch_username, refreshToken)
-      await fulfillTwitchReward(twitch_username, newToken, refreshToken, clientId, broadcaster_id, reward_id, id)
-      console.log('New token generated and added to queue.')
-    }
-
-    if (response.ok) {
-      console.log('Reward fulfilled!')
-    } else {
-      const json = await response.json()
-      console.log(json)
-      throw new Error('Error fulfilling reward.')
-    }
+    return res
   } catch (error) {
     console.log(error)
   }
 }
 
-// --------------------- GET TWITCH USER ---------------------
+// get specified twitch user
 const getUser = async (twitch_username, clientId, accessToken, refreshToken) => {
   try {
     const res = await fetch(`https://api.twitch.tv/helix/users?login=${twitch_username}`, {
@@ -90,22 +36,15 @@ const getUser = async (twitch_username, clientId, accessToken, refreshToken) => 
     })
     const data = await res.json()
     console.log(data)
-
-    if (res.status === 401) {
-      const newToken = await refreshAccessToken(twitch_username, refreshToken)
-      await getUser(twitch_username, clientId, newToken, refreshToken)
-      console.log('New token generated and getUser executed.')
-    }
   } catch (error) {
     console.log(error)
   }
 }
 
-// --------------------- GET CHANNEL REWARD ---------------------
+// get specific channel reward information
 const getSpecificReward = async (twitch_username, broadcaster_id, clientId, reward_id) => {
   const user = await User.findOne({ twitchId: twitch_username })
   const twitchAccessToken = user.twitchAccessToken
-  const twitchRefreshToken = user.twitchRefreshToken
   try {
     const res = await fetch(
       `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}`,
@@ -120,21 +59,15 @@ const getSpecificReward = async (twitch_username, broadcaster_id, clientId, rewa
     )
     const data = await res.json()
     console.log(data)
-
-    if (res.status === 401) {
-      const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
-      await getReward(twitch_username, broadcaster_id, clientId, reward_id)
-      console.log('New token generated and getReward executed.')
-    }
   } catch (error) {
     console.log(error)
   }
 }
 
+// get all channel rewards for a specific broadcaster
 const getAllRewards = async (twitch_username, broadcaster_id, clientId) => {
   const user = await User.findOne({ twitchId: twitch_username })
   const twitchAccessToken = user.twitchAccessToken
-  const twitchRefreshToken = user.twitchRefreshToken
 
   try {
     const res = await fetch(`https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcaster_id}`, {
@@ -147,18 +80,12 @@ const getAllRewards = async (twitch_username, broadcaster_id, clientId) => {
     })
     const data = await res.json()
     console.log(data)
-
-    if (res.status === 401) {
-      const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
-      await getAllRewards(twitch_username, broadcaster_id, clientId)
-      console.log('New token generated and getAllRewards executed.')
-    }
   } catch (error) {
     console.log(error)
   }
 }
 
-// --------------------- CREATE CHANNEL REWARD ---------------------\
+// create a new channel reward
 const createReward = async (
   twitch_username,
   broadcaster_id,
@@ -173,7 +100,6 @@ const createReward = async (
 ) => {
   const user = await User.findOne({ twitchId: twitch_username })
   const twitchAccessToken = user.twitchAccessToken
-  const twitchRefreshToken = user.twitchRefreshToken
   try {
     const res = await fetch(`https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcaster_id}`, {
       method: 'POST',
@@ -195,28 +121,12 @@ const createReward = async (
     })
     const data = await res.json()
     console.log(data)
-    if (res.status === 401) {
-      console.log('Access token expired. Generating new token (createReward)...')
-      const newToken = await refreshAccessToken(twitch_username, twitchRefreshToken)
-      await createReward(
-        twitch_username,
-        broadcaster_id,
-        clientId,
-        title,
-        prompt,
-        cost,
-        background_color,
-        is_user_input_required,
-        is_global_cooldown_enabled,
-        global_cooldown_seconds
-      )
-      console.log('New token generated and createReward executed.')
-    }
   } catch (error) {
     console.error(error)
   }
 }
 
+// create a webhook eventsub subscription for a specific channel reward
 const createEventSub = async (clientId, app_access_token, broadcaster_id, reward_id, ngrok_tunnel_url, webook_secret) => {
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
     method: 'POST',
@@ -243,6 +153,7 @@ const createEventSub = async (clientId, app_access_token, broadcaster_id, reward
   console.log(data.data)
 }
 
+// delete a webhook eventsub subscription for a specific channel reward
 const deleteEventSub = async (clientId, app_access_token, subscription_id) => {
   const res = await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${subscription_id}`, {
     method: 'DELETE',
@@ -252,9 +163,11 @@ const deleteEventSub = async (clientId, app_access_token, subscription_id) => {
       'Content-Type': 'application/json',
     },
   })
+  return res
 }
 
-// do this after EVERY stream
+// delete all webhook eventsub subscriptions
+// this function must be executed after every stream
 const dumpEventSubs = async (clientId, app_access_token) => {
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled', {
     method: 'GET',
@@ -272,7 +185,7 @@ const dumpEventSubs = async (clientId, app_access_token) => {
   }
 }
 
-
+// list all webhook eventsub subscriptions
 const eventSubList = async (clientId, app_access_token) => {
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled', {
     method: 'GET',
@@ -287,10 +200,6 @@ const eventSubList = async (clientId, app_access_token) => {
 }
 
 module.exports = {
-  storeTwitchAccessToken,
-  storeTwitchRefreshToken,
-  generateAccessToken,
-  refreshAccessToken,
   fulfillTwitchReward,
   getUser,
   getSpecificReward,
