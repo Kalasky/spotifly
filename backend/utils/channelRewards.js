@@ -1,6 +1,5 @@
 const User = require('../models/User')
 const twitchUtils = require('../utils/twitchUtils')
-const spotifyUtils = require('../utils/spotifyUtils')
 const { addToQueue } = require('../utils/spotifyUtils')
 
 const incrementCost = async () => {
@@ -57,13 +56,6 @@ const addToSpotifyQueue = async (twitch_username, clientId, broadcaster_id, rewa
       }
     )
     const data = await res.json()
-
-    if (res.status === 401) {
-      console.log('Token expired. Generating new token (addToSpotifyQueue)...')
-      await twitchUtils.refreshAccessToken(twitch_username, twitchRefreshToken)
-      await addToSpotifyQueue(twitch_username, clientId, broadcaster_id, reward_id)
-      console.log('New token generated and addToSpotifyQueue executed.')
-    }
 
     if (data.data.length > 0) {
       const initialTrackLink = data.data[0].user_input

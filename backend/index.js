@@ -6,6 +6,10 @@ const cron = require('node-cron')
 
 // twitch imports
 const twitchUtils = require('./utils/twitchUtils')
+const twitchRefreshAccessTokenMiddleware = require('./middleware/twitchRefreshHandler')
+
+// spotify imports
+const spotifyRefreshAccessTokenMiddleware = require('./middleware/spotifyRefreshHandler')
 
 // local file imports
 const deployCommands = require('./deploy-commands')
@@ -35,7 +39,7 @@ app.use(cors()) // enable CORS for all routes
 const spotifyRoutes = require('./routes/spotifyRoutes.js')
 const twitchRoutes = require('./routes/twitchRoutes.js')
 app.use(express.raw({ type: 'application/json' }))
-app.use('/api', cors(), express.raw({ type: 'application/json' }), twitchRoutes)
+app.use('/api', cors(), express.raw({ type: 'application/json' }), twitchRefreshAccessTokenMiddleware, spotifyRefreshAccessTokenMiddleware, twitchRoutes)
 app.use('/api', cors(), spotifyRoutes)
 
 app.get('/', (req, res) => {

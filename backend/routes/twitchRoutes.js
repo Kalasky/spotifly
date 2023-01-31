@@ -35,7 +35,6 @@ router.post('/twitch/eventsub', async (req, res) => {
 
     // check if message type is a notification
     if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {
-      console.log(notification.subscription.type, notification.event)
       // check if the reward is from Spotify channel
       if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_SPOTIFY) {
         console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
@@ -46,12 +45,6 @@ router.post('/twitch/eventsub', async (req, res) => {
           process.env.TWITCH_BROADCASTER_ID,
           process.env.TWITCH_REWARD_ID_SPOTIFY
         )
-        res.sendStatus(204)
-      }
-      if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_TC3) {
-        console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
-        // run the test creation3 function from channelRewards Utils
-        channelRewards.testCreation3()
         res.sendStatus(204)
       }
       if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_PENNY) {
