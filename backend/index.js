@@ -17,7 +17,6 @@ const refreshMiddleware = async (req, res, next) => {
   await twitchRefreshAccessTokenMiddleware(req, res, next)
 }
 
-
 // local file imports
 const deployCommands = require('./deploy-commands')
 
@@ -96,9 +95,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
 })
 
 // twitch commands
-const { commandListener } = require('./utils/tmiUtils')
+const { commandListener, adminCommandListener } = require('./utils/tmiUtils')
+const { dumpEventSubs } = require('./utils/twitchUtils')
 
 commandListener('!nowplaying', currentSong)
+adminCommandListener('!dump', dumpEventSubs)
 
 // uncomment to create your own eventsub subscription
 // make sure you have the correct env variables set
