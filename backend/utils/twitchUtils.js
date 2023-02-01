@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const { sendMessage } = require('./tmiUtils')
 
 // fulfill twitch channel reward from the redemption queue
 const fulfillTwitchReward = async (clientId, broadcaster_id, reward_id, id) => {
@@ -154,12 +155,12 @@ const createEventSub = async (clientId, app_access_token, broadcaster_id, reward
 }
 
 // delete a webhook eventsub subscription for a specific channel reward
-const deleteEventSub = async (clientId, app_access_token, subscription_id) => {
+const deleteEventSub = async (subscription_id) => {
   const res = await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${subscription_id}`, {
     method: 'DELETE',
     headers: {
-      'Client-ID': clientId,
-      Authorization: `Bearer ${app_access_token}`,
+      'Client-ID': process.env.TWITCH_CLIENT_ID,
+      Authorization: `Bearer ${process.env.APP_ACCESS_TOKEN}`,
       'Content-Type': 'application/json',
     },
   })
@@ -168,30 +169,31 @@ const deleteEventSub = async (clientId, app_access_token, subscription_id) => {
 
 // delete all webhook eventsub subscriptions
 // this function must be executed after every stream
-const dumpEventSubs = async (clientId, app_access_token) => {
+const dumpEventSubs = async () => {
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled', {
     method: 'GET',
     headers: {
-      'Client-ID': clientId,
-      Authorization: `Bearer ${app_access_token}`,
+      'Client-ID': process.env.TWITCH_CLIENT_ID,
+      Authorization: `Bearer ${process.env.APP_ACCESS_TOKEN}`,
       'Content-Type': 'application/json',
     },
   })
   const data = await res.json()
 
   for (let i = 0; i < data.data.length; i++) {
-    console.log(data.data[i].id)
-    deleteEventSub(clientId, app_access_token, data.data[i].id)
+    console.log('Unsubbed to:', data.data[i].id)
+    deleteEventSub(data.data[i].id)
   }
+  sendMessage('All eventsub subscriptions have been deleted.')
 }
 
 // list all webhook eventsub subscriptions
-const eventSubList = async (clientId, app_access_token) => {
+const eventSubList = async () => {
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled', {
     method: 'GET',
     headers: {
-      'Client-ID': clientId,
-      Authorization: `Bearer ${app_access_token}`,
+      'Client-ID': process.env.TWITCH_CLIENT_ID,
+      Authorization: `Bearer ${process.env.APP_ACCESS_TOKEN}`,
       'Content-Type': 'application/json',
     },
   })

@@ -14,7 +14,17 @@ const commandListener = (command, callback) => {
   })
 }
 
+const adminCommandListener = (command, callback) => {
+  twitchClient.on('message', (channel, tags, message, self) => {
+    if (self) return
+    if (message.toLowerCase() === command && tags.username === process.env.TWITCH_CHANNEL) {
+      callback()
+    }
+  })
+}
+
 module.exports = {
   sendMessage,
   commandListener,
+  adminCommandListener,
 }
