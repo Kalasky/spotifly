@@ -6,10 +6,10 @@ const cron = require('node-cron')
 
 // twitch imports
 const twitchUtils = require('./utils/twitchUtils')
-const twitchRefreshAccessTokenMiddleware = require('./middleware/twitchRefreshHandler')
+const { twitchRefreshAccessTokenMiddleware } = require('./middleware/twitchRefreshHandler')
 
 // spotify imports
-const spotifyRefreshAccessTokenMiddleware = require('./middleware/spotifyRefreshHandler')
+const { spotifyRefreshAccessTokenMiddleware } = require('./middleware/spotifyRefreshHandler')
 
 // local file imports
 const deployCommands = require('./deploy-commands')
@@ -34,13 +34,11 @@ const app = express()
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 app.use(cors()) // enable CORS for all routes
+app.use(express.raw({ type: 'application/json' }))
 
 // routes
-const spotifyRoutes = require('./routes/spotifyRoutes.js')
 const twitchRoutes = require('./routes/twitchRoutes.js')
-app.use(express.raw({ type: 'application/json' }))
-app.use('/api', cors(), express.raw({ type: 'application/json' }), twitchRefreshAccessTokenMiddleware, spotifyRefreshAccessTokenMiddleware, twitchRoutes)
-app.use('/api', cors(), spotifyRoutes)
+app.use('/api', twitchRefreshAccessTokenMiddleware, twitchRoutes)
 
 app.get('/', (req, res) => {
   res.send(
@@ -103,6 +101,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 // uncomment to dump all eventsub subscriptions, you must do this after EVERY stream
 // twitchUtils.dumpEventSubs(process.env.TWITCH_CLIENT_ID, process.env.APP_ACCESS_TOKEN)
+
+// twitchUtils.getAllRewards(process.env.TWITCH_BROADCASTER_ID, process.env.TWITCH_CLIENT_ID)
+
+twitchUtils.eventSubList(process.env.TWITCH_CLIENT_ID, process.env.APP_ACCESS_TOKEN)
 
 // deploy global commands when bot joins a new guild
 client.on(Events.GuildCreate, () => {

@@ -2,8 +2,7 @@ const express = require('express')
 const router = express.Router()
 const qs = require('qs')
 const User = require('../models/User')
-const bcrypt = require('bcrypt')
-const utils = require('../utils/spotifyUtils')
+const spotifyUtils = require('../middleware/spotifyRefreshHandler')
 
 // this route will accept get requests at /api/login and redirect to the spotify login page
 router.get('/spotify/login', async (req, res) => {
@@ -52,7 +51,7 @@ router.get('/spotify/callback', async (req, res) => {
       'Content-Type': 'application/x-www-form-urlencoded',
       Accept: 'application/json',
     },
-    body: utils.encodeFormData(body), // encode the data object into a query string
+    body: spotifyUtils.encodeFormData(body), // encode the data object into a query string
   })
     .then((response) => response.json())
     .then(async (data) => {
@@ -81,8 +80,8 @@ router.get('/spotify/callback', async (req, res) => {
 
           // if user is in the database and update their spotify id and followers
           if (user !== null) {
-            utils.storeSpotifyAccessToken(spotifyId, accessToken)
-            utils.storeSpotifyRefreshToken(spotifyId, refreshToken)
+            spotifyUtils.storeSpotifyAccessToken(spotifyId, accessToken)
+            spotifyUtils.storeSpotifyRefreshToken(spotifyId, refreshToken)
 
             User.findOneAndUpdate({ spotifyId: spotifyId }).then((user) => {
               if (user === null) {

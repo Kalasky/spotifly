@@ -11,6 +11,10 @@ const storeTwitchAccessToken = async (userId, twitchAccessToken) => {
   await User.findOneAndUpdate(userId, { twitchAccessToken: twitchAccessToken })
 }
 
+const storeTwitchRefreshToken = async (userId, twitchRefreshToken) => {
+  await User.findByIdAndUpdate(userId, { twitchRefreshToken: twitchRefreshToken })
+}
+
 // this function will generate a new access token if the user's access token has expired
 const generateAccessToken = async (userId, twitchRefreshToken) => {
   console.log('generating new access token')
@@ -46,17 +50,25 @@ const twitchRefreshAccessTokenMiddleware = async (req, res, next) => {
 
     // If the request is successful, continue with the current access token
     if (response.ok) {
+      console.log('Twitch access token is valid')
       req.user = user
       next()
     }
-  } catch (error) {
+
     // If the request fails with a "401 Unauthorized" error, generate a new access token
-    if (error.status === 401) {
+    if (response.status === 401) {
+      console.log('Twitch access token has expired')
       const newToken = await generateAccessToken(user.twitchId, user.twitchRefreshToken)
       req.user = { ...user, twitchAccessToken: newToken }
       next()
     }
+  } catch (error) {
+    console.log(error)
   }
 }
 
-module.exports = twitchRefreshAccessTokenMiddleware
+module.exports = {
+  twitchRefreshAccessTokenMiddleware,
+  storeTwitchAccessToken,
+  storeTwitchRefreshToken,
+}

@@ -1,8 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const qs = require('qs')
 const User = require('../models/User')
-const utils = require('../utils/twitchUtils')
+const qs = require('qs')
 const crypto = require('crypto')
 
 // import utils
@@ -22,6 +21,7 @@ const MESSAGE_TYPE_REVOCATION = 'revocation'
 const HMAC_PREFIX = 'sha256='
 
 router.post('/twitch/eventsub', async (req, res) => {
+  console.log('twitch eventsub route hit')
   let secret = getSecret()
   let message = getHmacMessage(req)
   let hmac = HMAC_PREFIX + getHmac(secret, message) // signature to compare
@@ -35,22 +35,24 @@ router.post('/twitch/eventsub', async (req, res) => {
 
     // check if message type is a notification
     if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {
-      // check if the reward is from Spotify channel
       if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_SPOTIFY) {
         console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
-        // run the queue function from twitchUtils
-        channelRewards.addToSpotifyQueue(
-          process.env.TWITCH_CHANNEL,
-          process.env.TWITCH_CLIENT_ID,
-          process.env.TWITCH_BROADCASTER_ID,
-          process.env.TWITCH_REWARD_ID_SPOTIFY
-        )
+        channelRewards.addToSpotifyQueue()
         res.sendStatus(204)
       }
       if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_PENNY) {
         console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
-        // run the incrementCost function from channelRewards Utils
         channelRewards.incrementCost()
+        res.sendStatus(204)
+      }
+      if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_SKIP_SONG) {
+        console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
+        channelRewards.skipSpotifySong()
+        res.sendStatus(204)
+      }
+      if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_VOLUME) {
+        console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
+        channelRewards.changeSpotifyVolume()
         res.sendStatus(204)
       }
     } else if (MESSAGE_TYPE_VERIFICATION === req.headers[MESSAGE_TYPE]) {
@@ -140,16 +142,23 @@ router.get('/twitch/callback', async (req, res) => {
   })
 
   const userData = await userResponse.json()
-  console.log(userData)
-  const twitch_username = userData.data[0].login
-  console.log(twitch_username)
 
+  const twitch_username = userData.data[0].login
   const user = await User.findOne({ twitchId: twitch_username })
-  console.log(user)
 
   if (user) {
-    utils.storeTwitchAccessToken(twitch_username, accessToken)
-    utils.storeTwitchRefreshToken(twitch_username, refreshToken)
+    User.findOneAndUpdate(
+      { twitchId: twitch_username },
+      { twitchAccessToken: accessToken, twitchRefreshToken: refreshToken },
+      { new: true },
+      (err, doc) => {
+        if (err) {
+          console.log('Something wrong when updating data!')
+        }
+
+        console.log('User successfully updated')
+      }
+    )
   } else {
     res.send('User not found. Please run the /setup discord command before logging in.')
   }

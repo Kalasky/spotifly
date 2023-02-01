@@ -11,6 +11,10 @@ const storeSpotifyAccessToken = async (userId, spotifyAccessToken) => {
   await User.findOneAndUpdate(userId, { spotifyAccessToken: spotifyAccessToken })
 }
 
+const storeSpotifyRefreshToken = async (userId, spotifyRefreshToken) => {
+  await User.findOneAndUpdate(userId, { spotifyRefreshToken: spotifyRefreshToken })
+}
+
 // this function will generate a new access token if the user's access token has expired
 const generateAccessToken = async (userId, spotifyRefreshToken) => {
   console.log('generating new access token')
@@ -37,26 +41,33 @@ const spotifyRefreshAccessTokenMiddleware = async (req, res, next) => {
 
   try {
     // Try making a request to the Spotify API with the current access token
-    const response = await fetch(`https://api.spotify.com/v1/me`, {
+    const response = await fetch(`https://api.spotify.com/v1/users/${process.env.SPOTIFY_USERNAME}`, {
       headers: {
         Authorization: `Bearer ${user.spotifyAccessToken}`,
         'Content-Type': 'application/json',
       },
     })
-
     // If the request is successful, continue with the current access token
     if (response.ok) {
+      console.log('Spotify access token is valid')
       req.user = user
       next()
     }
-  } catch (error) {
     // If the request fails with a "401 Unauthorized" error, generate a new access token
-    if (error.status === 401) {
+    if (response.status === 401) {
+      console.log('Spotify access token has expired')
       const newToken = await generateAccessToken(user.spotifyId, user.spotifyRefreshToken)
       req.user = { ...user, spotifyAccessToken: newToken }
       next()
     }
+  } catch (error) {
+    console.log(error)
   }
 }
 
-module.exports = spotifyRefreshAccessTokenMiddleware
+module.exports = {
+  spotifyRefreshAccessTokenMiddleware,
+  storeSpotifyAccessToken,
+  storeSpotifyRefreshToken,
+  encodeFormData,
+}
