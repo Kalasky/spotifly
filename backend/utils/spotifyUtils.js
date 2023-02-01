@@ -93,10 +93,28 @@ const changeVolume = async (volume) => {
   }
 }
 
+const currentSong = async () => {
+  const user = await User.findOne({ spotifyId: process.env.SPOTIFY_USERNAME })
+  try {
+    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${user.spotifyAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = await res.json()
+    sendMessage(`Now playing: ${data.item.name} by: ${data.item.artists[0].name} Link: ${data.item.external_urls.spotify}`)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 module.exports = {
   pauseSong,
   resumeSong,
   addToQueue,
   skipSong,
   changeVolume,
+  currentSong
 }
