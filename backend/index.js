@@ -96,28 +96,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 // twitch commands
 const { commandListener, adminCommandListener } = require('./utils/tmiUtils')
-const { dumpEventSubs } = require('./utils/twitchUtils')
+const { dumpEventSubs, getAllRewards, eventSubList } = require('./utils/twitchUtils')
 
+// !nowplaying will return the current song playing from your spotify account
 commandListener('!nowplaying', currentSong)
+// you must run the !dump command after every stream
 adminCommandListener('!dump', dumpEventSubs)
+// !rewards will return a list of all rewards for the broadcaster, this is useful for getting the reward id
+adminCommandListener('!rewards', getAllRewards)
+// !eventsubs will return a list of all enabled (active) eventsub subscriptions for the broadcaster
+adminCommandListener('!eventsubs', eventSubList)
 
 // uncomment to create your own eventsub subscription
-// make sure you have the correct env variables set
+// make sure you have the correct env variable set
 // twitchUtils.createEventSub(
-//   process.env.TWITCH_CLIENT_ID,
-//   process.env.APP_ACCESS_TOKEN,
-//   process.env.TWITCH_BROADCASTER_ID,
 //   process.env.TWITCH_REWARD_ID_SPOTIFY,
-//   process.env.NGROK_TUNNEL_URL,
-//   process.env.TWITCH_WEBHOOK_SECRET
 // )
-
-// uncomment to dump all eventsub subscriptions, you must do this after EVERY stream
-// twitchUtils.dumpEventSubs(process.env.TWITCH_CLIENT_ID, process.env.APP_ACCESS_TOKEN)
-
-// twitchUtils.getAllRewards(process.env.TWITCH_BROADCASTER_ID, process.env.TWITCH_CLIENT_ID)
-
-// twitchUtils.eventSubList(process.env.TWITCH_CLIENT_ID, process.env.APP_ACCESS_TOKEN)
 
 // deploy global commands when bot joins a new guild
 client.on(Events.GuildCreate, () => {

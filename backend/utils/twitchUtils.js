@@ -67,14 +67,14 @@ const getSpecificReward = async (twitch_username, broadcaster_id, clientId, rewa
 }
 
 // get all channel rewards for a specific broadcaster
-const getAllRewards = async (broadcaster_id, clientId) => {
+const getAllRewards = async () => {
   const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
 
   try {
-    const res = await fetch(`https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcaster_id}`, {
+    const res = await fetch(`https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}`, {
       method: 'GET',
       headers: {
-        'Client-ID': clientId,
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
         Authorization: `Bearer ${user.twitchAccessToken}`,
         'Content-Type': 'application/json',
       },
@@ -128,25 +128,25 @@ const createReward = async (
 }
 
 // create a webhook eventsub subscription for a specific channel reward
-const createEventSub = async (clientId, app_access_token, broadcaster_id, reward_id, ngrok_tunnel_url, webook_secret) => {
+const createEventSub = async (reward_id) => {
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
     method: 'POST',
     headers: {
-      'Client-ID': clientId,
-      Authorization: `Bearer ${app_access_token}`,
+      'Client-ID': process.env.TWITCH_CLIENT_ID,
+      Authorization: `Bearer ${process.env.APP_ACCESS_TOKEN}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       type: 'channel.channel_points_custom_reward_redemption.add',
       version: '1',
       condition: {
-        broadcaster_user_id: broadcaster_id,
+        broadcaster_user_id: process.env.TWITCH_BROADCASTER_ID,
         reward_id: reward_id,
       },
       transport: {
         method: 'webhook',
-        callback: ngrok_tunnel_url + '/api/twitch/eventsub',
-        secret: webook_secret,
+        callback: process.env.NGROK_TUNNEL_URL + '/api/twitch/eventsub',
+        secret: process.env.TWITCH_WEBHOOK_SECRET,
       },
     }),
   })
