@@ -6,6 +6,7 @@ const cron = require('node-cron')
 
 // twitch imports
 const twitchUtils = require('./utils/twitchUtils')
+const { currentSong } = require('./utils/spotifyUtils')
 const { twitchRefreshAccessTokenMiddleware } = require('./middleware/twitchRefreshHandler')
 
 // spotify imports
@@ -38,7 +39,7 @@ app.use(express.raw({ type: 'application/json' }))
 
 // routes
 const twitchRoutes = require('./routes/twitchRoutes.js')
-app.use('/api', twitchRefreshAccessTokenMiddleware, twitchRoutes)
+app.use('/api', spotifyRefreshAccessTokenMiddleware, twitchRoutes)
 
 app.get('/', (req, res) => {
   res.send(
@@ -87,6 +88,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
     })
   }
 })
+
+// twitch commands
+const { commandListener } = require('./utils/tmiUtils')
+
+commandListener('!nowplaying', currentSong)
 
 // uncomment to create your own eventsub subscription
 // make sure you have the correct env variables set
