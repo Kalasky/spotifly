@@ -17,7 +17,6 @@ const storeSpotifyRefreshToken = async (userId, spotifyRefreshToken) => {
 
 // this function will generate a new access token if the user's access token has expired
 const generateAccessToken = async (userId, spotifyRefreshToken) => {
-  console.log('generating new access token')
   const newToken = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {

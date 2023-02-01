@@ -17,7 +17,6 @@ const storeTwitchRefreshToken = async (userId, twitchRefreshToken) => {
 
 // this function will generate a new access token if the user's access token has expired
 const generateAccessToken = async (userId, twitchRefreshToken) => {
-  console.log('generating new access token')
   const newToken = await fetch('https://id.twitch.tv/oauth2/token', {
     method: 'POST',
     headers: {

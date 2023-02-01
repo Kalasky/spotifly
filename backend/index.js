@@ -12,6 +12,12 @@ const { twitchRefreshAccessTokenMiddleware } = require('./middleware/twitchRefre
 // spotify imports
 const { spotifyRefreshAccessTokenMiddleware } = require('./middleware/spotifyRefreshHandler')
 
+const refreshMiddleware = async (req, res, next) => {
+  await spotifyRefreshAccessTokenMiddleware(req, res, next)
+  await twitchRefreshAccessTokenMiddleware(req, res, next)
+}
+
+
 // local file imports
 const deployCommands = require('./deploy-commands')
 
@@ -39,7 +45,7 @@ app.use(express.raw({ type: 'application/json' }))
 
 // routes
 const twitchRoutes = require('./routes/twitchRoutes.js')
-app.use('/api', spotifyRefreshAccessTokenMiddleware, twitchRoutes)
+app.use('/api', refreshMiddleware, twitchRoutes)
 
 app.get('/', (req, res) => {
   res.send(
@@ -110,7 +116,7 @@ commandListener('!nowplaying', currentSong)
 
 // twitchUtils.getAllRewards(process.env.TWITCH_BROADCASTER_ID, process.env.TWITCH_CLIENT_ID)
 
-twitchUtils.eventSubList(process.env.TWITCH_CLIENT_ID, process.env.APP_ACCESS_TOKEN)
+// twitchUtils.eventSubList(process.env.TWITCH_CLIENT_ID, process.env.APP_ACCESS_TOKEN)
 
 // deploy global commands when bot joins a new guild
 client.on(Events.GuildCreate, () => {
