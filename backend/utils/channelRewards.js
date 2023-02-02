@@ -4,7 +4,7 @@ const { addToQueue, skipSong, changeVolume } = require('../utils/spotifyUtils')
 const { sendMessage } = require('../utils/tmiUtils')
 
 const incrementCost = async () => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
+  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
   try {
     const getReward = await fetch(
       `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&id=${process.env.TWITCH_REWARD_ID_PENNY}`,
@@ -42,7 +42,7 @@ const incrementCost = async () => {
 }
 
 const addToSpotifyQueue = async () => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
+  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
 
   try {
     const res = await fetch(
@@ -65,6 +65,11 @@ const addToSpotifyQueue = async () => {
     let trackId = newLink.substring(0, newLink.indexOf('?'))
     console.log(trackId)
 
+    if (trackId.includes('https://open.spotify.com/artist/')) {
+      sendMessage(`@${data.data[data.data.length - 1].user_name} you can't add an artist to the queue!`)
+      return
+    }
+
     addToQueue(trackId)
     sendMessage(`@${data.data[data.data.length - 1].user_name} your song has been added to the queue!`)
   } catch (error) {
@@ -77,7 +82,7 @@ const skipSpotifySong = async () => {
 }
 
 const changeSpotifyVolume = async () => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
+  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
 
   try {
     const res = await fetch(

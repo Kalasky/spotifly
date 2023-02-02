@@ -36,7 +36,7 @@ const generateAccessToken = async (userId, twitchRefreshToken) => {
 }
 
 const twitchRefreshAccessTokenMiddleware = async (req, res, next) => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
+  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
 
   try {
     // Try making a request to the Twitch API with the current access token

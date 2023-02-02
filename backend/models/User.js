@@ -3,16 +3,10 @@ const mongoose = require('mongoose')
 // create a schema for a spotify user
 const UserSchema = new mongoose.Schema(
   {
-    discordId: String,
-    discordUsername: String,
-    discordDiscriminator: String,
-    spotifyId: String,
-    twitchId: String,
-    spotifyFollowers: Number,
-    authorized: Boolean,
-    isPremium: Boolean,
+    spotifyUsername: String,
     spotifyAccessToken: String,
     spotifyRefreshToken: String,
+    twitchUsername: String,
     twitchAccessToken: String,
     twitchRefreshToken: String,
   },

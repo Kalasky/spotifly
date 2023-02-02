@@ -45,7 +45,7 @@ router.get('/spotify/callback', async (req, res) => {
     client_secret: process.env.SPOTIFY_CLIENT_SECRET,
   }
 
-  await fetch('https://accounts.spotify.com/api/token', {
+  const tokenReponse = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -53,55 +53,41 @@ router.get('/spotify/callback', async (req, res) => {
     },
     body: spotifyUtils.encodeFormData(body), // encode the data object into a query string
   })
-    .then((response) => response.json())
-    .then(async (data) => {
-      // extract access token and refresh token from response
-      accessToken = data.access_token
-      refreshToken = data.refresh_token
+  const tokenData = await tokenReponse.json()
+  // extract access token and refresh token from response
+  accessToken = tokenData.access_token
+  refreshToken = tokenData.refresh_token
 
-      console.log('access token: ', accessToken + '\n' + 'refresh token: ', refreshToken)
+  // find user by their twitch username or spotify username
+  const user = await User.findOne({
+    $or: [{ twitchUsername: process.env.TWITCH_USERNAME }, { spotifyUsername: process.env.SPOTIFY_USERNAME }],
+  })
 
-      // make fetch request to get user info
-      const res = await fetch('https://api.spotify.com/v1/me', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data)
-          // extract user info from response
-          const spotifyId = data.id
-          const spotifyFollowers = data.followers.total
-
-          // find user in the database by their spotify id
-          const user = User.findOne({ spotifyId: spotifyId })
-
-          // if user is in the database and update their spotify id and followers
-          if (user !== null) {
-            spotifyUtils.storeSpotifyAccessToken(spotifyId, accessToken)
-            spotifyUtils.storeSpotifyRefreshToken(spotifyId, refreshToken)
-
-            User.findOneAndUpdate({ spotifyId: spotifyId }).then((user) => {
-              if (user === null) {
-                res.send('User not found! Please run the /setup discord command.')
-                return
-              }
-
-              if (data.product === 'premium') {
-                user.isPremium = true
-              }
-              user.spotifyId = spotifyId
-              user.spotifyFollowers = spotifyFollowers
-              user.authorized = true
-              user.save()
-            })
-          } else {
-            res.send('User not found. Please run the /setup discord command before logging in.')
-          }
-        })
+  // if user is in the database and update their spotify id and followers
+  if (user) {
+    User.findOneAndUpdate(
+      { spotifyUsername: process.env.SPOTIFY_USERNAME },
+      { spotifyAccessToken: accessToken, spotifyRefreshToken: refreshToken },
+      { new: true }, // return updated doc
+      (err, doc) => {
+        if (err) {
+          console.log('Something wrong when updating data!', err)
+        }
+        console.log('User successfully updated', doc)
+      }
+    )
+  } else {
+    // if user is not in the database, create a new user
+    const newUser = new User({
+      spotifyUsername: process.env.SPOTIFY_USERNAME,
+      spotifyAccessToken: accessToken,
+      spotifyRefreshToken: refreshToken,
+      twitchUsername: process.env.TWITCH_USERNAME,
+      twitchAccessToken: '', // will be updated later by the twitch login
+      twitchRefreshToken: '', /// will be updated later by the twitch login
     })
+    await newUser.save()
+  }
 })
 
 module.exports = router
