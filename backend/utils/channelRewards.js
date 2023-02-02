@@ -4,7 +4,7 @@ const { addToQueue, skipSong, changeVolume } = require('../utils/spotifyUtils')
 const { sendMessage } = require('../utils/tmiUtils')
 
 const incrementCost = async () => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   try {
     const getReward = await fetch(
       `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&id=${process.env.TWITCH_REWARD_ID_PENNY}`,
@@ -42,36 +42,52 @@ const incrementCost = async () => {
 }
 
 const addToSpotifyQueue = async () => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
-
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   try {
-    const res = await fetch(
-      `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID_SPOTIFY}&status=UNFULFILLED`,
-      {
-        method: 'GET',
-        headers: {
-          'Client-ID': process.env.TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${user.twitchAccessToken}`,
-          'Content-Type': 'application/json',
-        },
+    // hasMore is used to check if there are more redemptions in the queue
+    let hasMore = true
+    let after = ''
+    let latestReward = ''
+    while (hasMore) {
+      const res = await fetch(
+        `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID_SPOTIFY}&status=UNFULFILLED&first=50&after=${after}`,
+        {
+          method: 'GET',
+          headers: {
+            'Client-ID': process.env.TWITCH_CLIENT_ID,
+            Authorization: `Bearer ${user.twitchAccessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      const data = await res.json()
+      // if there are no more redemptions, break out of the loop
+      if (data.data.length === 0) {
+        hasMore = false
+        console.log('No more redemptions.')
+        break
       }
-    )
-    const data = await res.json()
-    // grab the latest track link from the array of unfulfilled rewards
-    const initialTrackLink = data.data[data.data.length - 1].user_input
-    // remove the https://open.spotify.com/track/ from the link
-    let newLink = initialTrackLink.replace('https://open.spotify.com/track/', 'spotify:track:')
-    // remove the ?si=... from the link
-    let trackId = newLink.substring(0, newLink.indexOf('?'))
-    console.log(trackId)
-
-    if (trackId.includes('https://open.spotify.com/artist/')) {
-      sendMessage(`@${data.data[data.data.length - 1].user_name} you can't add an artist to the queue!`)
-      return
+      // grab the latest track link from the array of unfulfilled rewards
+      latestReward = data.data[data.data.length - 1].user_input
+      hasMore = data.pagination.cursor !== null
+      after = data.pagination.cursor
     }
+    // check if latestReward is not empty
+    if (latestReward) {
+      // remove the https://open.spotify.com/track/ from the link
+      let newLink = latestReward.replace('https://open.spotify.com/track/', 'spotify:track:')
+      // remove the ?si=... from the link
+      let trackId = newLink.substring(0, newLink.indexOf('?'))
 
-    addToQueue(trackId)
-    sendMessage(`@${data.data[data.data.length - 1].user_name} your song has been added to the queue!`)
+      // if https://open.spotify.com/artist/ is in the trackId, then it's an artist link, send error
+      if (trackId.includes('https://open.spotify.com/artist/')) {
+        sendMessage("You can't add an artist link to the queue!")
+        return
+      }
+
+      addToQueue(trackId)
+      sendMessage('Added to queue!')
+    }
   } catch (error) {
     console.log(error)
   }
@@ -82,27 +98,42 @@ const skipSpotifySong = async () => {
 }
 
 const changeSpotifyVolume = async () => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
-
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   try {
-    const res = await fetch(
-      `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID_VOLUME}&status=UNFULFILLED`,
-      {
-        method: 'GET',
-        headers: {
-          'Client-ID': process.env.TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${user.twitchAccessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-    const data = await res.json()
+    let hasMore = true
+    let after = ''
+    let latestReward = ''
+    while (hasMore) {
+      const res = await fetch(
+        `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID_VOLUME}&status=UNFULFILLED&first=50&after=${after}`,
+        {
+          method: 'GET',
+          headers: {
+            'Client-ID': process.env.TWITCH_CLIENT_ID,
+            Authorization: `Bearer ${user.twitchAccessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      const data = await res.json()
 
-    if (data.data.length > 0) {
-      const volume = data.data[data.data.length - 1].user_input
-      console.log(volume)
-      changeVolume(volume)
-      console.log('Volume changed and reward fulfilled.')
+      // if there are no more redemptions, break out of the loop
+      if (data.data.length === 0) {
+        hasMore = false
+        console.log('No more redemptions.')
+        break
+      }
+
+      // grab the latest track link from the array of unfulfilled rewards
+      latestReward = data.data[data.data.length - 1].user_input
+      hasMore = data.pagination.cursor !== null
+      after = data.pagination.cursor
+
+      if (latestReward) {
+        const volume = data.data[data.data.length - 1].user_input
+        console.log(volume)
+        changeVolume(volume)
+      }
     }
   } catch (error) {
     console.log(error)

@@ -1,7 +1,4 @@
 require('dotenv').config()
-// file system imports
-const fs = require('node:fs')
-const path = require('node:path')
 
 // twitch imports
 const twitchUtils = require('./utils/twitchUtils')
@@ -35,14 +32,9 @@ app.use(express.raw({ type: 'application/json' }))
 const twitchRoutes = require('./routes/twitchRoutes.js')
 const spotifyRoutes = require('./routes/spotifyRoutes.js')
 const eventSubRoutes = require('./routes/eventSubRoutes.js')
+
 app.use('/api', [twitchRoutes, spotifyRoutes])
 app.use('/events', refreshMiddleware, eventSubRoutes)
-
-app.get('/', (req, res) => {
-  res.send(
-    'You have been successfully authenticated! You can now close this window. Enjoy all the features of the Spotifly Discord bot!'
-  )
-})
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`)
@@ -69,14 +61,14 @@ adminCommandListener('!eventsubs', eventSubList)
 // uncomment to create your own eventsub subscription
 // make sure you have the correct env variable set
 // twitchUtils.createEventSub(
+//   process.env.TWITCH_REWARD_ID_SPOTIFY,
+// )
+twitchUtils.createEventSub(
+  process.env.TWITCH_REWARD_ID_SKIP_SONG,
+)
+// twitchUtils.createEventSub(
 //   process.env.TWITCH_REWARD_ID_VOLUME,
 // )
 // twitchUtils.createEventSub(
-//   process.env.TWITCH_REWARD_ID_SKIP,
-// )
-// twitchUtils.createEventSub(
 //   process.env.TWITCH_REWARD_ID_PENNY,
-// )
-// twitchUtils.createEventSub(
-//   process.env.TWITCH_REWARD_ID_SPOTIFY,
 // )

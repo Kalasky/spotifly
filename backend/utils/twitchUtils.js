@@ -3,7 +3,7 @@ const { sendMessage } = require('./tmiUtils')
 
 // fulfill twitch channel reward from the redemption queue
 const fulfillTwitchReward = async (clientId, broadcaster_id, reward_id, id) => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   try {
     const res = await fetch(
       `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}&id=${id}`,
@@ -27,7 +27,7 @@ const fulfillTwitchReward = async (clientId, broadcaster_id, reward_id, id) => {
 
 // get specified twitch user
 const getUser = async (twitch_username, clientId) => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   try {
     const res = await fetch(`https://api.twitch.tv/helix/users?login=${twitch_username}`, {
       method: 'GET',
@@ -46,13 +46,13 @@ const getUser = async (twitch_username, clientId) => {
 
 // get specific channel reward information
 const getSpecificReward = async (twitch_username, broadcaster_id, clientId, reward_id) => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   try {
     const res = await fetch(
       `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}`,
       {
         method: 'GET',
-        headers: {
+        headers: { 
           'Client-ID': clientId,
           Authorization: `Bearer ${user.twitchAccessToken}`,
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ const getSpecificReward = async (twitch_username, broadcaster_id, clientId, rewa
 
 // get all channel rewards for a specific broadcaster
 const getAllRewards = async () => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
 
   try {
     const res = await fetch(`https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}`, {
@@ -96,7 +96,7 @@ const createReward = async (
   is_global_cooldown_enabled,
   global_cooldown_seconds
 ) => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_USERNAME })
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   const twitchAccessToken = user.twitchAccessToken
   try {
     const res = await fetch(

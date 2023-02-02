@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const User = require('../models/User')
 const crypto = require('crypto')
 
 // import utils
@@ -24,34 +23,34 @@ router.post('/twitch/eventsub', async (req, res) => {
   let secret = getSecret()
   let message = getHmacMessage(req)
   let hmac = HMAC_PREFIX + getHmac(secret, message) // signature to compare
-  console.log(`hmac: ${hmac}`, `signature: ${req.headers[TWITCH_MESSAGE_SIGNATURE]}`)
 
   if (true === verifyMessage(hmac, req.headers[TWITCH_MESSAGE_SIGNATURE])) {
     console.log('signatures match')
 
     // get JSON object from request body
     let notification = req.body
+    console.log('notification:', notification)
 
     // check if message type is a notification
     if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {
       switch (notification.event.reward.id) {
         case process.env.TWITCH_REWARD_ID_SPOTIFY:
-          console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
+          console.log(`Recieved ${notification.event.reward.title}`)
           channelRewards.addToSpotifyQueue()
           res.sendStatus(204)
           break
         case process.env.TWITCH_REWARD_ID_PENNY:
-          console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
+          console.log(`Recieved ${notification.event.reward.title}`)
           channelRewards.incrementCost()
           res.sendStatus(204)
           break
         case process.env.TWITCH_REWARD_ID_SKIP_SONG:
-          console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
+          console.log(`Recieved ${notification.event.reward.title}`)
           channelRewards.skipSpotifySong()
           res.sendStatus(204)
           break
         case process.env.TWITCH_REWARD_ID_VOLUME:
-          console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
+          console.log(`Recieved ${notification.event.reward.title}`)
           channelRewards.changeSpotifyVolume()
           res.sendStatus(204)
           break

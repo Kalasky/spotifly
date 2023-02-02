@@ -5,7 +5,7 @@ const User = require('../models/User')
 
 // this function will pause the user's currently playing song
 const pauseSong = async () => {
-  const user = await User.findOne({ spotifyId: process.env.SPOTIFY_USERNAME })
+  const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
   try {
     const res = await fetch('https://api.spotify.com/v1/me/player/pause', {
       method: 'PUT',
@@ -22,7 +22,7 @@ const pauseSong = async () => {
 
 // this function will resume the user's currently playing song
 const resumeSong = async () => {
-  const user = await User.findOne({ spotifyId: process.env.SPOTIFY_USERNAME })
+  const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
   try {
     const res = await fetch('https://api.spotify.com/v1/me/player/play', {
       method: 'PUT',
@@ -39,7 +39,7 @@ const resumeSong = async () => {
 
 // this function will skip the user's currently playing song
 const skipSong = async () => {
-  const user = await User.findOne({ spotifyId: process.env.SPOTIFY_USERNAME })
+  const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
   try {
     const res = await fetch('https://api.spotify.com/v1/me/player/next', {
       method: 'POST',
@@ -56,7 +56,7 @@ const skipSong = async () => {
 
 // this function will add a song to the user's queue
 const addToQueue = async (uri) => {
-  const user = await User.findOne({ spotifyId: process.env.SPOTIFY_USERNAME })
+  const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
   try {
     let res = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
       method: 'POST',
@@ -78,7 +78,7 @@ const addToQueue = async (uri) => {
 }
 
 const changeVolume = async (volume) => {
-  const user = await User.findOne({ spotifyId: process.env.SPOTIFY_USERNAME })
+  const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
   try {
     const res = await fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${volume}`, {
       method: 'PUT',
@@ -94,7 +94,7 @@ const changeVolume = async (volume) => {
 }
 
 const currentSong = async () => {
-  const user = await User.findOne({ spotifyId: process.env.SPOTIFY_USERNAME })
+  const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
   try {
     const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
       method: 'GET',
