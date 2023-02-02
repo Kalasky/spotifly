@@ -2,95 +2,6 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/User')
 const qs = require('qs')
-const crypto = require('crypto')
-
-// import utils
-const channelRewards = require('../utils/channelRewards')
-
-// notifaction request headers for twitch
-const TWITCH_MESSAGE_ID = 'Twitch-Eventsub-Message-Id'.toLowerCase()
-const TWITCH_MESSAGE_TIMESTAMP = 'Twitch-Eventsub-Message-Timestamp'.toLowerCase()
-const TWITCH_MESSAGE_SIGNATURE = 'Twitch-Eventsub-Message-Signature'.toLowerCase()
-const MESSAGE_TYPE = 'Twitch-Eventsub-Message-Type'.toLowerCase()
-
-// notification message types
-const MESSAGE_TYPE_VERIFICATION = 'webhook_callback_verification'
-const MESSAGE_TYPE_NOTIFICATION = 'notification'
-const MESSAGE_TYPE_REVOCATION = 'revocation'
-
-const HMAC_PREFIX = 'sha256='
-
-router.post('/twitch/eventsub', async (req, res) => {
-  console.log('twitch eventsub route hit')
-  let secret = getSecret()
-  let message = getHmacMessage(req)
-  let hmac = HMAC_PREFIX + getHmac(secret, message) // signature to compare
-  console.log(`hmac: ${hmac}`, `signature: ${req.headers[TWITCH_MESSAGE_SIGNATURE]}`)
-
-  if (true === verifyMessage(hmac, req.headers[TWITCH_MESSAGE_SIGNATURE])) {
-    console.log('signatures match')
-
-    // get JSON object from request body
-    let notification = req.body
-
-    // check if message type is a notification
-    if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {
-      if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_SPOTIFY) {
-        console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
-        channelRewards.addToSpotifyQueue()
-        res.sendStatus(204)
-      }
-      if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_PENNY) {
-        console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
-        channelRewards.incrementCost()
-        res.sendStatus(204)
-      }
-      if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_SKIP_SONG) {
-        console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
-        channelRewards.skipSpotifySong()
-        res.sendStatus(204)
-      }
-      if (notification.event.reward.id === process.env.TWITCH_REWARD_ID_VOLUME) {
-        console.log(`Notification type ${notification.subscription.type} received for ${notification.event.reward.title}.`)
-        channelRewards.changeSpotifyVolume()
-        res.sendStatus(204)
-      }
-    } else if (MESSAGE_TYPE_VERIFICATION === req.headers[MESSAGE_TYPE]) {
-      res.status(200).send(notification.challenge)
-    } else if (MESSAGE_TYPE_REVOCATION === req.headers[MESSAGE_TYPE]) {
-      res.sendStatus(204)
-    } else {
-      res.sendStatus(204)
-      console.log('unknown message type')
-    }
-  } else {
-    res.sendStatus(403)
-    console.log('signatures do not match')
-  }
-})
-
-const getSecret = () => {
-  return process.env.TWITCH_WEBHOOK_SECRET
-}
-
-const getHmacMessage = (req) => {
-  let body = JSON.stringify(req.body)
-  // concatenate the message id, timestamp, and body to create the message to sign
-  return req.headers[TWITCH_MESSAGE_ID] + req.headers[TWITCH_MESSAGE_TIMESTAMP] + body
-}
-
-const getHmac = (secret, message) => {
-  // create the HMAC using the secret and message and return the hex digest
-  return crypto.createHmac('sha256', secret).update(message).digest('hex')
-}
-
-const verifyMessage = (hmac, signature) => {
-  if (!hmac || !signature) {
-    throw new Error('Both hmac and signature are required for message verification')
-  }
-  // compare the signatures using a constant time comparison to prevent timing attacks
-  return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(signature))
-}
 
 router.get('/twitch/login', async (req, res) => {
   const scope = 'channel:manage:redemptions channel:read:redemptions channel:manage:vips chat:edit chat:read'
@@ -111,7 +22,6 @@ let accessToken
 let refreshToken
 
 router.get('/twitch/callback', async (req, res) => {
-  console.log('Twitch callback')
   // Get the authorization code from the query parameters
   const code = req.query.code
   const tokenResponse = await fetch('https://id.twitch.tv/oauth2/token', {
@@ -132,35 +42,34 @@ router.get('/twitch/callback', async (req, res) => {
   accessToken = tokenData.access_token
   refreshToken = tokenData.refresh_token
 
-  const userResponse = await fetch('https://api.twitch.tv/helix/users', {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-      'Client-ID': process.env.TWITCH_CLIENT_ID,
-    },
+  // find user by their twitch username or spotify username
+  const user = await User.findOne({
+    $or: [{ twitchUsername: process.env.TWITCH_USERNAME }, { spotifyUsername: process.env.SPOTIFY_USERNAME }],
   })
-
-  const userData = await userResponse.json()
-
-  const twitch_username = userData.data[0].login
-  const user = await User.findOne({ twitchId: twitch_username })
 
   if (user) {
     User.findOneAndUpdate(
-      { twitchId: twitch_username },
+      { twitchUsername: process.env.TWITCH_USERNAME },
       { twitchAccessToken: accessToken, twitchRefreshToken: refreshToken },
-      { new: true },
+      { new: true }, // return updated doc
       (err, doc) => {
         if (err) {
-          console.log('Something wrong when updating data!')
+          console.log('Something wrong when updating data!', err)
         }
-
-        console.log('User successfully updated')
+        console.log('User successfully updated', doc)
       }
     )
   } else {
-    res.send('User not found. Please run the /setup discord command before logging in.')
+    // if user is not in the database, create a new user
+    const newUser = new User({
+      spotifyUsername: process.env.SPOTIFY_USERNAME,
+      spotifyAccessToken: '', // will be updated later by the spotify login
+      spotifyRefreshToken: '', // will be updated later by the spotify login
+      twitchUsername: process.env.TWITCH_USERNAME,
+      twitchAccessToken: accessToken,
+      twitchRefreshToken: refreshToken,
+    })
+    await newUser.save()
   }
 })
 

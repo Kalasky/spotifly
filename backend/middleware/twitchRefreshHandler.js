@@ -36,7 +36,7 @@ const generateAccessToken = async (userId, twitchRefreshToken) => {
 }
 
 const twitchRefreshAccessTokenMiddleware = async (req, res, next) => {
-  const user = await User.findOne({ twitchId: process.env.TWITCH_CHANNEL })
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
 
   try {
     // Try making a request to the Twitch API with the current access token
@@ -57,7 +57,7 @@ const twitchRefreshAccessTokenMiddleware = async (req, res, next) => {
     // If the request fails with a "401 Unauthorized" error, generate a new access token
     if (response.status === 401) {
       console.log('Twitch access token has expired')
-      const newToken = await generateAccessToken(user.twitchId, user.twitchRefreshToken)
+      const newToken = await generateAccessToken(user.twitchUsername, user.twitchRefreshToken)
       req.user = { ...user, twitchAccessToken: newToken }
       next()
     }
