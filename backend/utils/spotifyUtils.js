@@ -1,14 +1,14 @@
-const { sendMessage } = require('./tmiUtils')
 const User = require('../models/User')
 const { twitchHandler } = require('../middleware/twitchRefreshHandler')
 const { spotifyHandler } = require('../middleware/spotifyRefreshHandler')
+const { setupTwitchClient } = require('./tmiSetup')
+const twitchClient = setupTwitchClient()
+
 
 const refreshMiddleware = async () => {
   await twitchHandler()
   await spotifyHandler()
 }
-const { setupTwitchClient } = require('./tmiSetup')
-const twitchClient = setupTwitchClient()
 
 // --------------------- PLAYBACK FUNCTIONS ---------------------
 
@@ -104,7 +104,7 @@ const addToQueue = async (uri) => {
   } catch (error) {
     console.log(error)
     if (error.message === 'Error adding track to queue.' && error.status !== 401) {
-      sendMessage(
+      twitchClient.say(process.env.TWITCH_USERNAME,
         'Invalid Spotify song link. Please try again. (Example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=32cfb1adf4b942d9)'
       )
     }
@@ -140,7 +140,7 @@ const currentSong = async () => {
     })
     const data = await res.json()
     console.log(data)
-    sendMessage(`Now playing: ${data.item.name} by: ${data.item.artists[0].name} Link: ${data.item.external_urls.spotify}`)
+    twitchClient.say(process.env.TWITCH_USERNAME, `Now playing: ${data.item.name} by: ${data.item.artists[0].name} Link: ${data.item.external_urls.spotify}`)
   } catch (error) {
     console.log(error)
   }

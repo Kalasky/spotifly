@@ -49,14 +49,13 @@ const twitchRefreshAccessTokenMiddleware = async (req, res, next) => {
 
     // If the request is successful, continue with the current access token
     if (response.ok) {
-      console.log('Twitch access token is valid')
       req.user = user
       next()
     }
 
     // If the request fails with a "401 Unauthorized" error, generate a new access token
     if (response.status === 401) {
-      console.log('Twitch access token has expired')
+      console.log('Twitch access token has expired, generating new access token...')
       const newToken = await generateAccessToken(user.twitchUsername, user.twitchRefreshToken)
       req.user = { ...user, twitchAccessToken: newToken }
       next()
@@ -78,14 +77,9 @@ const twitchHandler = async () => {
       },
     })
 
-    // If the request is successful, continue with the current access token
-    if (response.ok) {
-      console.log('Twitch access token is valid')
-    }
-
     // If the request fails with a "401 Unauthorized" error, generate a new access token
     if (response.status === 401) {
-      console.log('Twitch access token has expired')
+      console.log('Twitch access token has expired, generating new access token...')
       const newToken = await generateAccessToken(user.twitchUsername, user.twitchRefreshToken)
       return newToken
     }

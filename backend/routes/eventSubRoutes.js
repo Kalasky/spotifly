@@ -19,7 +19,6 @@ const MESSAGE_TYPE_REVOCATION = 'revocation'
 const HMAC_PREFIX = 'sha256='
 
 router.post('/twitch/eventsub', async (req, res) => {
-  console.log('twitch eventsub route hit')
   let secret = getSecret()
   let message = getHmacMessage(req)
   let hmac = HMAC_PREFIX + getHmac(secret, message) // signature to compare
@@ -29,7 +28,6 @@ router.post('/twitch/eventsub', async (req, res) => {
 
     // get JSON object from request body
     let notification = req.body
-    console.log('notification:', notification)
 
     // check if message type is a notification
     if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {

@@ -1,7 +1,8 @@
 const User = require('../models/User')
-const { sendMessage } = require('./tmiUtils')
 const { twitchHandler } = require('../middleware/twitchRefreshHandler')
 const { spotifyHandler } = require('../middleware/spotifyRefreshHandler')
+const { setupTwitchClient } = require('./tmiSetup')
+const twitchClient = setupTwitchClient()
 
 const refreshMiddleware = async () => {
   await twitchHandler()
@@ -138,6 +139,7 @@ const createReward = async (
 
 // create a webhook eventsub subscription for a specific channel reward
 const createEventSub = async (reward_id) => {
+  await refreshMiddleware()
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
     method: 'POST',
     headers: {
@@ -194,7 +196,7 @@ const dumpEventSubs = async () => {
     console.log('Unsubbed to:', data.data[i].id)
     deleteEventSub(data.data[i].id)
   }
-  sendMessage('All eventsub subscriptions have been deleted.')
+  twitchClient.say(process.env.TWITCH_USERNAME, 'All eventsub subscriptions have been deleted.')
 }
 
 // list all webhook eventsub subscriptions

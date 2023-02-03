@@ -1,8 +1,6 @@
 require('dotenv').config()
 
 // twitch imports
-const twitchUtils = require('./utils/twitchUtils')
-const { currentSong } = require('./utils/spotifyUtils')
 const { twitchRefreshAccessTokenMiddleware } = require('./middleware/twitchRefreshHandler')
 
 // spotify imports
@@ -46,28 +44,18 @@ mongoose
   .catch((e) => console.log('DB CONNECTION ERROR: ', e))
 
 // twitch commands
-const { commandListener, adminCommandListener, searchSongCommand } = require('./utils/tmiUtils')
-const { dumpEventSubs, getAllRewards, eventSubList } = require('./utils/twitchUtils')
+const {
+  currentSongCommand,
+  eventSubListCommand,
+  rewardsCommand,
+  dumpEventSubsCommand,
+  searchSongCommand,
+  createEventSubCommand,
+} = require('./utils/tmiUtils')
 
-commandListener('!nowplaying', currentSong)
+currentSongCommand()
+eventSubListCommand()
+rewardsCommand()
+dumpEventSubsCommand()
 searchSongCommand()
-adminCommandListener('!dump', dumpEventSubs)
-adminCommandListener('!rewards', getAllRewards)
-adminCommandListener('!eventsubs', eventSubList)
-
-
-
-// uncomment to create your own eventsub subscription
-// make sure you have the correct env variable set
-// twitchUtils.createEventSub(
-//   process.env.TWITCH_REWARD_ID_SPOTIFY,
-// )
-// twitchUtils.createEventSub(
-//   process.env.TWITCH_REWARD_ID_SKIP_SONG,
-// )
-// twitchUtils.createEventSub(
-//   process.env.TWITCH_REWARD_ID_VOLUME,
-// )
-// twitchUtils.createEventSub(
-//   process.env.TWITCH_REWARD_ID_PENNY,
-// )
+createEventSubCommand()

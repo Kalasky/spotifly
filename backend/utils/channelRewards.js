@@ -1,7 +1,8 @@
 const User = require('../models/User')
 const twitchUtils = require('../utils/twitchUtils')
 const { addToQueue, skipSong, changeVolume } = require('../utils/spotifyUtils')
-const { sendMessage } = require('../utils/tmiUtils')
+const { setupTwitchClient } = require('./tmiSetup')
+const twitchClient = setupTwitchClient()
 
 const incrementCost = async () => {
   const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
@@ -81,12 +82,12 @@ const addToSpotifyQueue = async () => {
 
       // if https://open.spotify.com/artist/ is in the trackId, then it's an artist link, send error
       if (trackId.includes('https://open.spotify.com/artist/')) {
-        sendMessage("You can't add an artist link to the queue!")
+        twitchClient.say(process.env.TWITCH_USERNAME, "You can't add an artist link to the queue!")
         return
       }
 
       addToQueue(trackId)
-      sendMessage('Added to queue!')
+      twitchClient.say(process.env.TWITCH_USERNAME, 'Added to queue!')
     }
   } catch (error) {
     console.log(error)
