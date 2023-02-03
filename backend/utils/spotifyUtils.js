@@ -7,8 +7,35 @@ const refreshMiddleware = async () => {
   await twitchHandler()
   await spotifyHandler()
 }
+const { setupTwitchClient } = require('./tmiSetup')
+const twitchClient = setupTwitchClient()
 
 // --------------------- PLAYBACK FUNCTIONS ---------------------
+
+const searchSong = async (query) => {
+  await refreshMiddleware()
+  const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
+  try {
+    const res = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=track&limit=5`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${user.spotifyAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = await res.json()
+    let result = ''
+    // concatenate the 5 search track names and links into the result string
+    for (let i = 0; i < 5; i++) {
+      result += `${i + 1}. ${data.tracks.items[i].name}\n`
+      result += `${data.tracks.items[i].external_urls.spotify}\n`
+    }
+    console.log('before send message')
+    twitchClient.say(process.env.TWITCH_USERNAME, result)
+  } catch (error) {
+    console.log(error)
+  }
+}
 
 // this function will pause the user's currently playing song
 const pauseSong = async () => {
@@ -126,4 +153,5 @@ module.exports = {
   skipSong,
   changeVolume,
   currentSong,
+  searchSong,
 }

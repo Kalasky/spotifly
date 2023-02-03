@@ -46,17 +46,16 @@ mongoose
   .catch((e) => console.log('DB CONNECTION ERROR: ', e))
 
 // twitch commands
-const { commandListener, adminCommandListener } = require('./utils/tmiUtils')
+const { commandListener, adminCommandListener, searchSongCommand } = require('./utils/tmiUtils')
 const { dumpEventSubs, getAllRewards, eventSubList } = require('./utils/twitchUtils')
 
-// !nowplaying will return the current song playing from your spotify account
 commandListener('!nowplaying', currentSong)
-// you must run the !dump command after every stream
+searchSongCommand()
 adminCommandListener('!dump', dumpEventSubs)
-// !rewards will return a list of all rewards for the broadcaster, this is useful for getting the reward id
 adminCommandListener('!rewards', getAllRewards)
-// !eventsubs will return a list of all enabled (active) eventsub subscriptions for the broadcaster
 adminCommandListener('!eventsubs', eventSubList)
+
+
 
 // uncomment to create your own eventsub subscription
 // make sure you have the correct env variable set
