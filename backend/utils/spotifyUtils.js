@@ -1,5 +1,12 @@
 const { sendMessage } = require('./tmiUtils')
 const User = require('../models/User')
+const { twitchHandler } = require('../middleware/twitchRefreshHandler')
+const { spotifyHandler } = require('../middleware/spotifyRefreshHandler')
+
+const refreshMiddleware = async () => {
+  await twitchHandler()
+  await spotifyHandler()
+}
 
 // --------------------- PLAYBACK FUNCTIONS ---------------------
 
@@ -94,6 +101,7 @@ const changeVolume = async (volume) => {
 }
 
 const currentSong = async () => {
+  await refreshMiddleware()
   const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
   try {
     const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
@@ -104,6 +112,7 @@ const currentSong = async () => {
       },
     })
     const data = await res.json()
+    console.log(data)
     sendMessage(`Now playing: ${data.item.name} by: ${data.item.artists[0].name} Link: ${data.item.external_urls.spotify}`)
   } catch (error) {
     console.log(error)
@@ -116,5 +125,5 @@ module.exports = {
   addToQueue,
   skipSong,
   changeVolume,
-  currentSong
+  currentSong,
 }

@@ -1,5 +1,13 @@
 const User = require('../models/User')
 const { sendMessage } = require('./tmiUtils')
+const { twitchHandler } = require('../middleware/twitchRefreshHandler')
+const { spotifyHandler } = require('../middleware/spotifyRefreshHandler')
+
+const refreshMiddleware = async () => {
+  await twitchHandler()
+  await spotifyHandler()
+}
+
 
 // fulfill twitch channel reward from the redemption queue
 const fulfillTwitchReward = async (clientId, broadcaster_id, reward_id, id) => {
@@ -68,6 +76,7 @@ const getSpecificReward = async (twitch_username, broadcaster_id, clientId, rewa
 
 // get all channel rewards for a specific broadcaster
 const getAllRewards = async () => {
+  await refreshMiddleware()
   const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
 
   try {
@@ -170,6 +179,7 @@ const deleteEventSub = async (subscription_id) => {
 // delete all webhook eventsub subscriptions
 // this function must be executed after every stream
 const dumpEventSubs = async () => {
+  await refreshMiddleware()
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled', {
     method: 'GET',
     headers: {
@@ -189,6 +199,7 @@ const dumpEventSubs = async () => {
 
 // list all webhook eventsub subscriptions
 const eventSubList = async () => {
+  await refreshMiddleware()
   const res = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions?status=enabled', {
     method: 'GET',
     headers: {

@@ -66,8 +66,37 @@ const twitchRefreshAccessTokenMiddleware = async (req, res, next) => {
   }
 }
 
+const twitchHandler = async () => {
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
+
+  try {
+    // Try making a request to the Twitch API with the current access token
+    const response = await fetch(`https://api.twitch.tv/helix/users`, {
+      headers: {
+        Authorization: `Bearer ${user.twitchAccessToken}`,
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+      },
+    })
+
+    // If the request is successful, continue with the current access token
+    if (response.ok) {
+      console.log('Twitch access token is valid')
+    }
+
+    // If the request fails with a "401 Unauthorized" error, generate a new access token
+    if (response.status === 401) {
+      console.log('Twitch access token has expired')
+      const newToken = await generateAccessToken(user.twitchUsername, user.twitchRefreshToken)
+      return newToken
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 module.exports = {
   twitchRefreshAccessTokenMiddleware,
+  twitchHandler,
   storeTwitchAccessToken,
   storeTwitchRefreshToken,
 }
