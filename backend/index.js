@@ -63,9 +63,9 @@ adminCommandListener('!eventsubs', eventSubList)
 // twitchUtils.createEventSub(
 //   process.env.TWITCH_REWARD_ID_SPOTIFY,
 // )
-twitchUtils.createEventSub(
-  process.env.TWITCH_REWARD_ID_SKIP_SONG,
-)
+// twitchUtils.createEventSub(
+//   process.env.TWITCH_REWARD_ID_SKIP_SONG,
+// )
 // twitchUtils.createEventSub(
 //   process.env.TWITCH_REWARD_ID_VOLUME,
 // )
