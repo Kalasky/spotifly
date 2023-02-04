@@ -106,6 +106,7 @@ const createReward = async (
   is_global_cooldown_enabled,
   global_cooldown_seconds
 ) => {
+  await refreshMiddleware()
   const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   const twitchAccessToken = user.twitchAccessToken
   try {
@@ -131,7 +132,7 @@ const createReward = async (
       }
     )
     const data = await res.json()
-    console.log(data)
+    console.log('Reward ID:', data.data[0].id, 'Broadcaster ID:', data.data[0].broadcaster_id)
   } catch (error) {
     console.error(error)
   }

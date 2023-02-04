@@ -59,6 +59,7 @@ router.get('/twitch/callback', async (req, res) => {
         console.log('User successfully updated', doc)
       }
     )
+    res.redirect('http://localhost:8888')
   } else {
     // if user is not in the database, create a new user
     const newUser = new User({
@@ -70,6 +71,7 @@ router.get('/twitch/callback', async (req, res) => {
       twitchRefreshToken: refreshToken,
     })
     await newUser.save()
+    res.redirect('http://localhost:8888')
   }
 })
 

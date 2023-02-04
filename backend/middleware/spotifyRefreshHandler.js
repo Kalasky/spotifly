@@ -1,4 +1,6 @@
 const User = require('../models/User')
+const { setupTwitchClient } = require('../utils/tmiSetup')
+const twitchClient = setupTwitchClient()
 
 // this function will encode the data object into a query string for the fetch request
 const encodeFormData = (data) => {
@@ -58,6 +60,18 @@ const spotifyRefreshAccessTokenMiddleware = async (req, res, next) => {
       req.user = { ...user, spotifyAccessToken: newToken }
       next()
     }
+
+    if (response.status === 401) {
+      console.log('Spotify access token has expired, generating new access token...')
+      const newToken = await generateAccessToken(user.spotifyUsername, user.spotifyRefreshToken)
+      if (newToken) {
+        req.user = { ...user, spotifyAccessToken: newToken }
+        next()
+      } else {
+        console.error('Spotify refresh token FAILED. Visit http://localhost:8888/api/spotify/login to renew your tokens.')
+        twitchClient.say(process.env.TWITCH_USERNAME, 'Spotify refresh token FAILED. Check the console for more info.')
+      }
+    }
   } catch (error) {
     console.log(error)
   }
@@ -79,7 +93,12 @@ const spotifyHandler = async () => {
     if (response.status === 401) {
       console.log('Spotify access token has expired, generating new access token...')
       const newToken = await generateAccessToken(user.spotifyUsername, user.spotifyRefreshToken)
-      return newToken
+      if (newToken) {
+        console.log('New access token generated successfully!')
+      } else {
+        console.error('Spotify refresh token FAILED. Visit http://localhost:8888/api/spotify/login to renew your tokens.')
+        twitchClient.say(process.env.TWITCH_USERNAME, 'Spotify refresh token FAILED. Check the console for more info.')
+      }
     }
   } catch (error) {
     console.log(error)

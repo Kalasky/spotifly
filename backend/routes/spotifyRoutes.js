@@ -76,6 +76,7 @@ router.get('/spotify/callback', async (req, res) => {
         console.log('User successfully updated', doc)
       }
     )
+    res.redirect('http://localhost:8888')
   } else {
     // if user is not in the database, create a new user
     const newUser = new User({
@@ -87,6 +88,8 @@ router.get('/spotify/callback', async (req, res) => {
       twitchRefreshToken: '', /// will be updated later by the twitch login
     })
     await newUser.save()
+
+    res.redirect(307, 'http://localhost:8888')
   }
 })
 

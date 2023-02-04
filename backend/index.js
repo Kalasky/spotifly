@@ -34,6 +34,10 @@ const eventSubRoutes = require('./routes/eventSubRoutes.js')
 app.use('/api', [twitchRoutes, spotifyRoutes])
 app.use('/events', refreshMiddleware, eventSubRoutes)
 
+app.get('/', (req, res) => {
+  res.send('Access token and refresh token successfully refreshed! You can close this window now.')
+})
+
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`)
 })
@@ -51,6 +55,7 @@ const {
   dumpEventSubsCommand,
   searchSongCommand,
   createEventSubCommand,
+  createDefaultChannelRewards
 } = require('./utils/tmiUtils')
 
 currentSongCommand()
@@ -59,3 +64,4 @@ rewardsCommand()
 dumpEventSubsCommand()
 searchSongCommand()
 createEventSubCommand()
+createDefaultChannelRewards()

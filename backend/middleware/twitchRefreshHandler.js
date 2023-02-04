@@ -1,4 +1,6 @@
 const User = require('../models/User')
+const { setupTwitchClient } = require('../utils/tmiSetup')
+const twitchClient = setupTwitchClient()
 
 // this function will encode the data object into a query string for the fetch request
 const encodeFormData = (data) => {
@@ -57,8 +59,13 @@ const twitchRefreshAccessTokenMiddleware = async (req, res, next) => {
     if (response.status === 401) {
       console.log('Twitch access token has expired, generating new access token...')
       const newToken = await generateAccessToken(user.twitchUsername, user.twitchRefreshToken)
-      req.user = { ...user, twitchAccessToken: newToken }
-      next()
+      if (newToken) {
+        req.user = { ...user, twitchAccessToken: newToken }
+        next()
+      } else {
+        console.error('Twitch Refresh token FAILED. Visit http://localhost:8888/api/twitch/login to renew your tokens.')
+        twitchClient.say(process.env.TWITCH_USERNAME, 'Twitch Refresh token FAILED. Check the console for more info.')
+      }
     }
   } catch (error) {
     console.log(error)
@@ -81,7 +88,12 @@ const twitchHandler = async () => {
     if (response.status === 401) {
       console.log('Twitch access token has expired, generating new access token...')
       const newToken = await generateAccessToken(user.twitchUsername, user.twitchRefreshToken)
-      return newToken
+      if (newToken) {
+        console.log('New access token generated successfully!')
+      } else {
+        console.error('Twitch Refresh token FAILED. Visit http://localhost:8888/api/twitch/login to renew your tokens.')
+        twitchClient.say(process.env.TWITCH_USERNAME, 'Twitch Refresh token FAILED. Check the console for more info.')
+      }
     }
   } catch (error) {
     console.log(error)
