@@ -1,7 +1,7 @@
 const twitchClientSetup = require('./tmiSetup')
 const twitchClient = twitchClientSetup.setupTwitchClient()
 const { searchSong } = require('./spotifyUtils')
-const { createEventSub, getAllRewards, dumpEventSubs, eventSubList } = require('./twitchUtils')
+const { createEventSub, getAllRewards, dumpEventSubs, eventSubList, createReward } = require('./twitchUtils')
 const { currentSong } = require('./spotifyUtils')
 
 const searchSongCommand = () => {
@@ -12,6 +12,10 @@ const searchSongCommand = () => {
 
     if (command === 'spotifysearch' || command === 'ss') {
       searchSong(args.join(' '))
+    }
+
+    if (command === 'ss' && args.length === 0) {
+      twitchClient.say(process.env.TWITCH_USERNAME, 'Please enter a track name to search for i.e. !ss bad habit.')
     }
   })
 }
@@ -69,6 +73,20 @@ const currentSongCommand = () => {
   })
 }
 
+const createDefaultChannelRewards = () => {
+  twitchClient.on('message', (channel, tags, message, self) => {
+    if (self) return
+    const command = message.slice(1).split(' ')[0].toLowerCase()
+    if (command === 'defaultrewards' || (command === 'dr' && tags.username === process.env.TWITCH_USERNAME)) {
+      createReward('Skip Song', 'Skip the current song', 1000, '#F33A22', false, false, 0)
+      createReward('Change Song Volume', 'Enter any number between 0 and 100 to change the volume of the current song.', 500, '#43C4EB', true, false, 0)
+      createReward('Drop a penny in the well!', 'Every time this reward is redeemed, the cost will increase in value by 1 channel point.', 1, '#77FF83', false, false, 0)
+      createReward('Song Submission', 'Submit a spotify *song link* directly to the queue! ', 250, '#392e5c', true, true, 30)
+    }
+  })
+}
+
+
 module.exports = {
   currentSongCommand,
   eventSubListCommand,
@@ -76,4 +94,5 @@ module.exports = {
   dumpEventSubsCommand,
   searchSongCommand,
   createEventSubCommand,
+  createDefaultChannelRewards,
 }
