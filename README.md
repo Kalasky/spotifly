@@ -7,6 +7,7 @@
 
 <h1 align="center">Spotifly</h1>
 
+ > Having Spotify Premium is __crucial__ for this bot to function optimally.
   <p align="center">
     Introducing Spotifly, the Twitch Spotify Bot that lets viewers control playback, search tracks, add to queue, see current song, and skip songs. Spotifly brings a new level of interactivity to Twitch streams, making music a shared experience. Future updates will add even more features to Spotifly, making it the go-to tool for streamers and viewers looking to enhance their musical experience on Twitch.
     <br />
@@ -77,20 +78,25 @@ Spotifly is free to use, but if you appreciate the work that went into this proj
 
 ## NOTICE
 
-> <i> The setup process for Spotifly has a lot of moving parts, but I have tried to make the prcoess as easy as possible. If you have any questions or need help, please join the [Discord](https://discord.gg/HpAB5ymCgc) and ask for help in the #help-1 or #help-2 channel. I will be happy to help you get Spotifly up and running. If you have a development environment already up and running on your PC then this setup should feel familiar.<br /><br />With that out of the way, let's get started!</i>
+> <i> The setup process for Spotifly has a lot of moving parts, but I have tried to make the process as easy as possible. If you have any questions or need help, please join the [Discord](https://discord.gg/HpAB5ymCgc) and ask for help in the #help-1 or #help-2 channel. I will be happy to help you get Spotifly up and running. If you have a development environment already up and running on your PC then this setup should feel familiar.<br /><br />With that out of the way, let's get started!</i>
 
 <!-- GETTING STARTED -->
 
 ## Getting Started
 
-To get the project up and running locally, follow the steps below. if you already have the prerequisites installed, you can skip to the <a href="#installation">Installation</a> section.
+To get the project up and running locally, follow the steps below.
 
-> To make the installation process go by swiftly, let's install scoop. Scoop is a command-line installer for Windows that makes it easy to install and update many popular command-line tools and applications. It is similar to Homebrew on macOS and Linux. If you already have scoop installed, you can skip this step. <br /><br /> Open up windows powershell and run the following two command to install scoop:
+> To make the installation process go by swiftly, let's install Scoop. Scoop is a command-line installer for Windows that makes it easy to install and update many popular command-line tools and applications. It is similar to Homebrew on macOS and Linux. If you already have scoop installed, you can skip this step. <br /><br /> Open up windows powershell and run the following two command to install scoop:
 
 ```sh
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 iwr -useb get.scoop.sh | iex
 ```
+> You will need to enter "Y" to confirm the installation of scoop.
+
+<br />
+
+# Install the following tools in Windows Powershell:
 
 1. ### Git:
 
@@ -98,6 +104,7 @@ iwr -useb get.scoop.sh | iex
     scoop install git
   ```
 - c. Once Git is installed, run the following command to confirm that Git is installed: `git --version`
+
 2. ### Visual Studio Code:
 
 - ```sh
@@ -119,7 +126,7 @@ iwr -useb get.scoop.sh | iex
 - b. Click on the "Create an App" button and enter an app name and description of your choice.
 - c. Click on the "Edit Settings" button and add the following URLs to the "Redirect URIs" section: http://localhost:8888/api/spotify/callback
 - d. Click on the "Save" button.
-- e. Click on the "Show Client Secret" button and copy the Client ID and Client Secret to a text file. You will need these later.<br /><br />
+- e. Click on the "Show Client Secret" button and copy the Client ID and Client Secret to a notepad. You will need these later.<br /><br />
 
 5. ### Twitch Developer Account:
 
@@ -128,8 +135,7 @@ iwr -useb get.scoop.sh | iex
 - c. Enter the following URL for the OAuth Redirect URL:
   http://localhost:8888/api/twitch/callback
 - d. Select the "Chat Bot" category then click on the "Create" button.
-- e. Click on the "Manage" button and copy the Client ID and Client Secret (```"New Secret" button```) to the same text file you used for the Spotify Client ID and Client Secret. You will need these later.
-
+- e. Click on the "Manage" button and copy the Client ID and Client Secret (`"New Secret" button`) to the same notepad you used for the Spotify Client ID and Client Secret. You will need these later.
 
 ## Installation
 
@@ -140,7 +146,7 @@ iwr -useb get.scoop.sh | iex
   ```sh
   git clone https://github.com/Kalasky/spotifly.git
   ```
-
+> If you cannot clone the project, try running powershell as an administrator.
 2. Navigate to the project directory:
 
    ```sh
@@ -149,7 +155,7 @@ iwr -useb get.scoop.sh | iex
 
 3. Install dependencies:
 
-- To install the project dependencies, run the following command (make sure you are in ```/spotifly/backend``` directory when running this command):
+- To install the project dependencies, run the following command (make sure you are in `/spotifly/backend` directory when running this command):
 
   ```sh
   npm install
@@ -162,28 +168,29 @@ iwr -useb get.scoop.sh | iex
   ```sh
   code .
   ```
-> You can open a new terminal in Visual Studio Code by pressing ```Ctrl + ` ``` or by clicking on the "Terminal" tab and then clicking on the "New Terminal" button. This way you don't have to keep switching back and forth between windows powershell and Visual Studio Code.
+
+  > You can open a new terminal in Visual Studio Code by pressing `` Ctrl + `  `` or by clicking on the "Terminal" tab and then clicking on the "New Terminal" button. This way you don't have to keep switching back and forth between windows powershell and Visual Studio Code.
 
 5. Setup your database:
 
-  - a. Visit https://account.mongodb.com/account/login and log in or setup your MongoDB account.
+- a. Visit https://account.mongodb.com/account/login and log in or setup your MongoDB account.
   > If this is your first time making an account with Mongo Atlas, choose Javascript as your preferred language.
-  - b. Click on the "Create" button. Select the "Shared" option. Use AWS for the cloud provider. Select the "Free" option for the cluster tier, it should be the default "M0 Sandbox". Click on the "Create Cluster" button.
-    - You will be prompted to make a database user. You can put anything for the user name, but usually you just put it as "admin". For the password, you can use a password generator to generate a secure password. Make sure to save the password somewhere safe. You will need it later.
-    - You will be prompted to add an IP address. You can add your current IP address.
-  - c. Once the cluster is created, click on the "Connect" button. Click on the "Connect Your Application" button. Copy the connection string and save it to a text file. You will need this later. ```Make sure the connection string is for the node.js driver.```
-
+- b. Click on the "Create" button. Select the "Shared" option. Use AWS for the cloud provider. Select the "Free" option for the cluster tier, it should be the default "M0 Sandbox". Click on the "Create Cluster" button.
+  - You will be prompted to make a database user. You can put anything for the user name, but usually you just put it as "admin". For the password, you can use a password generator to generate a secure password. Make sure to save the password somewhere safe. You will need it later.
+  - You will be prompted to add an IP address. You can add your current IP address.
+- c. Once the cluster is created, click on the "Connect" button. Click on the "Connect Your Application" button. Copy the connection string and save it to a notepad. You will need this later. `Make sure the connection string is for the node.js driver.`
 
 <!-- CONFIGURATION -->
 
 ## Configuration
 
-1. Locate the .env.example file in in Visual Studio Code ```where all the files are on the left side``` and rename it to ```.env```
-2. Open the ```.env``` file and enter the following information:
+1. Locate the .env.example file in Visual Studio Code `where all the files are on the left side` and rename it to `.env`
+> Just to reiterate, rename the `.env.example` file to `.env`. If you don't do this, the project will not work.
+2. Open the `.env` file and enter the following information:
 
 ### Spotify
 
-- `SPOTIFY_USERNAME`: Your Spotify username
+- `SPOTIFY_USERNAME`: Your Spotify username __MAKE SURE IT IS ALL LOWERCASE__
 - `SPOTIFY_CLIENT_ID`: The Client ID you copied in your notepad from the Spotify Developer Dashboard
 - `SPOTIFY_CLIENT_SECRET`: The Client Secret you copied in your notepad from the Spotify Developer Dashboard
 - `SPOTIFY_REDIRECT_URI`: http://localhost:8888/api/spotify/callback
@@ -195,8 +202,8 @@ iwr -useb get.scoop.sh | iex
 ### Twitch
 
 - `TWITCH_BOT_USERNAME`: The name you set for the Twitch application
-- `TWITCH_USERNAME`: Your Twitch username
-- `TWITCH_BROADCASTER_ID`: Your Twitch broadcaster ID, you can find your broadcaster ID by running the `!dr` command mentioned below. Please note that you will need to run the `!dr` command after you have <strong>finished</strong> setting up the bot. So ```come back``` to this step later.
+- `TWITCH_USERNAME`: Your Twitch username __MAKE SURE IT IS ALL LOWERCASE__
+- `TWITCH_BROADCASTER_ID`: Your Twitch broadcaster ID, you can find your broadcaster ID by running the `!dr` command mentioned below. Please note that you will need to run the `!dr` command after you have <strong>finished</strong> setting up the bot. So `come back` to this step later.
 - `TWITCH_BOT_TOKEN`: Get your bot token at: https://twitchapps.com/tmi/
 - `TWITCH_CLIENT_ID`: The Client ID you copied in your notepad from the Twitch Developer Console
 - `TWITCH_CLIENT_SECRET`: The Client Secret you copied in your notepad from the Twitch Developer Console
@@ -204,7 +211,7 @@ iwr -useb get.scoop.sh | iex
 
 #### To retrieve the reward IDs, run the `!dr` command in your Twitch chat. The reward IDs will be displayed in the console.<br />
 
-> Only run the `!dr` command after you have <strong>finished</strong> setting up the bot! So ```come back``` to this step later.
+> Only run the `!dr` command after you have <strong>finished</strong> setting up the bot! So `come back` to this step later.
 > <br />
 
 ##### Example output:
@@ -223,20 +230,21 @@ iwr -useb get.scoop.sh | iex
 
 #### Twitch Webhook
 
-- `TWITCH_WEBHOOK_SECRET`: The secret must be an ASCII string that’s a minimum of ```10``` characters long and a maximum of ```100``` characters long. You can use a simple string like, “this is my secret”; however, you should consider using a random byte generator meant for cryptography. First, let's install openssl:
+- `TWITCH_WEBHOOK_SECRET`: The secret must be an ASCII string that’s a minimum of `10` characters long and a maximum of `100` characters long. You can use a simple string like, “this is my secret”; however, you should consider using a random byte generator meant for cryptography. First, let's install openssl:
 
 ```sh
 scoop install openssl
 ```
+
 - Then, run the following command to generate a random string:
 
 ```sh
 openssl rand -hex 32
 ```
+
 - Copy the output and paste it into the .env file for the TWITCH_WEBHOOK_SECRET variable.
 
-
-- ```APP_ACCESS_TOKEN```: This is the access token for the Twitch application, and is not the same as the user access token. You can get the applications access token by setting up a Twitch CLI.
+- `APP_ACCESS_TOKEN`: This is the access token for the Twitch application, and is not the same as the user access token. You can get the applications access token by setting up a Twitch CLI.
 
 - We will be using scoop to install the Twith CLI. You should have scoop installed already if you have been following along with the guide.
 
@@ -251,7 +259,7 @@ scoop install twitch-cli
 scoop update twitch-cli
 ```
 
-- Before you can use the Twitch CLI, you must configure it with your application’s client ID and secret that you should have saved in a text file or somewhere else.
+- Before you can use the Twitch CLI, you must configure it with your application’s client ID and secret that you should have saved in a notepad or somewhere else.
 - To configure the Twitch CLI, run the following command:
 
 ```sh
@@ -273,8 +281,7 @@ twitch token
 ```sh
 scoop install ngrok
 ```
-
-- To start ngrok, run the following command:
+> In order for the ngrok tunnel to work you NEED to make an ngrok account. You can do that here: https://dashboard.ngrok.com/signup <br />Once you have signed up, go to the Setup & Installation tab. There will be a "Connect your account" section with a command for you to copy and paste into your terminal. The command should look somethinglike this: ```ngrok config add-authtoken 1YgrFEE4zSTHGDHDGdjghgDHGdG```<br />Once you have done that, you can run the following command to start ngrok:
 
 ```sh
 ngrok http 8888
@@ -287,44 +294,51 @@ ngrok http 8888
 https://5d0b-123-456-789-123.ngrok.io
 ```
 
-
 # Okay I'm Done! Now What?
+
 - Visit http://localhost:8888/api/twitch/login to login to Twitch. Your Twitch access token and refresh token should now be logged directly into the MongoDB database.
 - Then visit http://localhost:8888/api/spotify/login to login to Spotify. The spotify access token and refresh token should now be logged directly into the MongoDB database.
-- Now you can run the command ```!dr``` in your Twitch chat to get the reward IDs. The reward IDs will be displayed in the console. As well as your broadcaster ID!
+- Now you can run the command `!dr` in your Twitch chat to get the reward IDs. The reward IDs will be displayed in the console. As well as your broadcaster ID!
 - Once the channel rewards have been created, feel free to modify them in your creator dashboard, it won't affect the bot.
   <br /><br />
-# <div id="process">Process for Starting & Ending Stream</div>
-- Okay, so you want to start you stream for the day. First, start the ngrok tunnel by running the command ```ngrok http 8888``` in a terminal. Second, paste the https string into the .env file for the ```NGROK_TUNNEL_URL``` variable. Third, in the ```/spotifly/backend``` directory, run ```node index.js``` to start the bot. Fourth, run the command ```!ces``` in your twitch chat to create the event subscriptions for the rewards you already created before with ```!dr``` Fifth, Have a good stream :)
-- Now you want to end stream, first run the command ```!des``` in your twitch chat to delete the event subscriptions. Second, stop the ngrok tunnel by pressing ```ctrl + c``` in the terminal. Third, stop the bot by pressing ```ctrl + c``` in the terminal. That's it!
 
-- __NOTICE__: Before every stream you must run the ngrok tunnel and paste in the __new__ https string into the ```.env``` file for the ```NGROK_TUNNEL_URL``` variable. Then don't forget to run ```!ces``` in your twitch chat to create the event subscriptions, since you deleted them with ```!des``` at the end of your last stream.
+# <div id="process">Process for Starting & Ending Stream</div>
+
+- Okay, so you want to start you stream for the day. First, start the ngrok tunnel by running the command `ngrok http 8888` in a terminal. Second, paste the https string into the .env file for the `NGROK_TUNNEL_URL` variable. Third, in the `/spotifly/backend` directory, run `node index.js` to start the bot. Fourth, run the command `!ces` in your twitch chat to create the event subscriptions for the rewards you already created before with `!dr` Fifth, Have a good stream :)
+- Now you want to end stream, first run the command `!des` in your twitch chat to delete the event subscriptions. Second, stop the ngrok tunnel by pressing `ctrl + c` in the terminal. Third, stop the bot by pressing `ctrl + c` in the terminal. That's it!
+
+- **NOTICE**: Before every stream you must run the ngrok tunnel and paste in the **new** https string into the `.env` file for the `NGROK_TUNNEL_URL` variable. Then don't forget to run `!ces` in your twitch chat to create the event subscriptions, since you deleted them with `!des` at the end of your last stream.
 - Rinse and repeat! Once you get the flow down, starting and ending stream will be a breeze.
-- Side note: You don't necissarily have to terminate the ngrok tunnel everytime you end stream. If you still have the same tunnel running since last stream, don't worry about pasting in a new https string into the ```.env``` file. 
+- Side note: You don't necissarily have to terminate the ngrok tunnel everytime you end stream. If you still have the same tunnel running since last stream, don't worry about pasting in a new https string into the `.env` file.
   <br /><br />
 
 > If you encounter any issues, join the [Discord](https://discord.gg/HpAB5ymCgc) server and ask for help. I will be happy to help you out. When asking for help, please provide as much information as possible. For example, what error message you are getting, what you have tried so far, etc.
 
 <br /> <br />
+
 # <div id="accessrefresh">Access & Refresh Tokens</div>
+
 - I implemented a refresh token system for both Spotify and Twitch. So if your access token expires mid stream, the bot will automatically refresh the token for you. You don't have to worry about anything. Refresh tokens last for a decent bit of time, but when it does expire, the bot will notify you directly in chat telling you to have a look at the console. Then just visit the two login pages to get new access tokens and refresh tokens. The database will automatically update the new tokens for you, no need to termiate the bots session, just continue on with the stream!
   <br /> <br />
 
 # <div id="updates">Updates</div>
+
 - I will continue to update this bot wih new features and bug fixes. Join the [Discord](https://discord.gg/HpAB5ymCgc) server to stay up to date with the latest updates.
-- Feel free to suggest new features that you think would be cool! It doesn't __need__ to be spotify related. I am open to any ideas.
-- When a new feature is released, you will be notified in the Discord server. 
-- To update the bot to the latest version, run the following command in the ```/spotifly/backend``` directory:
-```sh 
+- Feel free to suggest new features that you think would be cool! It doesn't **need** to be spotify related. I am open to any ideas.
+- When a new feature is released, you will be notified in the Discord server.
+- To update the bot to the latest version, run the following command in the `/spotifly/backend` directory:
+
+```sh
 git pull origin main
 ```
+
 - And whala! You are now up to date with the latest version of the bot.
   <br /> <br />
   # <div id="contributing">Contributing</div>
   Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
   <br /><br />
 - If you would like to contribute to this project, feel free to fork the repo and make a pull request. I will review the pull request and merge it if I think it is a good addition to the project.
-- If you decide on contributing, ```please make an effort``` to follow the same flow that the codebase is currently using. For example, if you are adding a new feature, try to follow the same flow as the other features. If you are adding a new command, try to follow the same flow as the other commands. This will make it easier for me to review the pull request and merge it. Happy coding!
+- If you decide on contributing, `please make an effort` to follow the same flow that the codebase is currently using. For example, if you are adding a new feature, try to follow the same flow as the other features. If you are adding a new command, try to follow the same flow as the other commands. This will make it easier for me to review the pull request and merge it. Happy coding!
   <br /><br />
 
 ## Show Your Support!
@@ -332,5 +346,3 @@ git pull origin main
   <a href="https://streamlabs.com/kalaskyyy/tip">
     <img src="images/donate.png" alt="Logo" width="100" height="100">
   </a>
-
-
