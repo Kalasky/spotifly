@@ -135,7 +135,7 @@ const createReward = async (
       }
     )
     const data = await res.json()
-    console.log('Reward ID:', data.data[0].id, 'Broadcaster ID:', data.data[0].broadcaster_id)
+    console.log('Reward Name:', data.data[0].title, 'Reward ID:', data.data[0].id)
   } catch (error) {
     console.error(error)
   }
