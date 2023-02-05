@@ -1,7 +1,7 @@
 const twitchClientSetup = require('./tmiSetup')
 const twitchClient = twitchClientSetup.setupTwitchClient()
 const { searchSong } = require('./spotifyUtils')
-const { createEventSub, getAllRewards, dumpEventSubs, eventSubList, createReward } = require('./twitchUtils')
+const { createEventSub, getAllRewards, dumpEventSubs, eventSubList, createReward, getUser } = require('./twitchUtils')
 const { currentSong } = require('./spotifyUtils')
 
 const searchSongCommand = () => {
@@ -16,6 +16,18 @@ const searchSongCommand = () => {
 
     if (command === 'ss' && args.length === 0) {
       twitchClient.say(process.env.TWITCH_USERNAME, 'Please enter a track name to search for i.e. !ss bad habit.')
+    }
+  })
+}
+
+const getStreamerData = () => {
+  twitchClient.on('message', (channel, tags, message, self) => {
+    if (self) return
+    const args = message.slice(1).split(' ')
+    const command = args.shift().toLowerCase()
+
+    if (command === 'me' && tags.username === process.env.TWITCH_USERNAME) {
+      getUser()
     }
   })
 }
@@ -95,4 +107,5 @@ module.exports = {
   searchSongCommand,
   createEventSubCommand,
   createDefaultChannelRewards,
+  getStreamerData
 }

@@ -9,7 +9,6 @@ const refreshMiddleware = async () => {
   await spotifyHandler()
 }
 
-
 // fulfill twitch channel reward from the redemption queue
 const fulfillTwitchReward = async (clientId, broadcaster_id, reward_id, id) => {
   const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
@@ -35,13 +34,14 @@ const fulfillTwitchReward = async (clientId, broadcaster_id, reward_id, id) => {
 }
 
 // get specified twitch user
-const getUser = async (twitch_username, clientId) => {
+const getUser = async () => {
+  await refreshMiddleware()
   const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   try {
-    const res = await fetch(`https://api.twitch.tv/helix/users?login=${twitch_username}`, {
+    const res = await fetch(`https://api.twitch.tv/helix/users?login=${process.env.TWITCH_USERNAME}`, {
       method: 'GET',
       headers: {
-        'Client-ID': clientId,
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
         Authorization: `Bearer ${user.twitchAccessToken}`,
         'Content-Type': 'application/json',
       },
@@ -61,7 +61,7 @@ const getSpecificReward = async (twitch_username, broadcaster_id, clientId, rewa
       `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcaster_id}&reward_id=${reward_id}`,
       {
         method: 'GET',
-        headers: { 
+        headers: {
           'Client-ID': clientId,
           Authorization: `Bearer ${user.twitchAccessToken}`,
           'Content-Type': 'application/json',
@@ -81,14 +81,17 @@ const getAllRewards = async () => {
   const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
 
   try {
-    const res = await fetch(`https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}`, {
-      method: 'GET',
-      headers: {
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        Authorization: `Bearer ${user.twitchAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-    })
+    const res = await fetch(
+      `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}`,
+      {
+        method: 'GET',
+        headers: {
+          'Client-ID': process.env.TWITCH_CLIENT_ID,
+          Authorization: `Bearer ${user.twitchAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
     const data = await res.json()
     console.log(data)
   } catch (error) {

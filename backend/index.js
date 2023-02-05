@@ -55,7 +55,8 @@ const {
   dumpEventSubsCommand,
   searchSongCommand,
   createEventSubCommand,
-  createDefaultChannelRewards
+  createDefaultChannelRewards,
+  getStreamerData
 } = require('./utils/tmiUtils')
 
 currentSongCommand()
@@ -65,3 +66,4 @@ dumpEventSubsCommand()
 searchSongCommand()
 createEventSubCommand()
 createDefaultChannelRewards()
+getStreamerData()
