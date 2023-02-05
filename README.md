@@ -85,25 +85,26 @@ Spotifly is free to use, but if you appreciate the work that went into this proj
 
 To get the project up and running locally, follow the steps below. if you already have the prerequisites installed, you can skip to the <a href="#installation">Installation</a> section.
 
-> To make the installation process go by swiftly, let's install scoop. Scoop is a command-line installer for Windows that makes it easy to install and update many popular command-line tools and applications. It is similar to Homebrew on macOS and Linux. If you already have scoop installed, you can skip this step. <br /><br /> Open up windows powershell and run the following command to install scoop:
+> To make the installation process go by swiftly, let's install scoop. Scoop is a command-line installer for Windows that makes it easy to install and update many popular command-line tools and applications. It is similar to Homebrew on macOS and Linux. If you already have scoop installed, you can skip this step. <br /><br /> Open up windows powershell and run the following two command to install scoop:
 
 ```sh
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 iwr -useb get.scoop.sh | iex
 ```
 
-1. ### Visual Studio Code:
-
-- ```sh
-    scoop install vscode
-  ```
-- c. Once Visual Studio Code is installed, run the following command to confirm that Visual Studio Code is installed: `code --version`
-
-2. ### Git:
+1. ### Git:
 
 - ```sh
     scoop install git
   ```
 - c. Once Git is installed, run the following command to confirm that Git is installed: `git --version`
+2. ### Visual Studio Code:
+
+- ```sh
+    scoop bucket add extras
+    scoop install vscode
+  ```
+- c. Once Visual Studio Code is installed, run the following command to confirm that Visual Studio Code is installed: `code --version`
 
 3. ### Node.js:
 
@@ -127,7 +128,7 @@ iwr -useb get.scoop.sh | iex
 - c. Enter the following URL for the OAuth Redirect URL:
   http://localhost:8888/api/twitch/callback
 - d. Select the "Chat Bot" category then click on the "Create" button.
-- e. Click on the "Manage" button and copy the Client ID and Client Secret to the same text file you used for the Spotify Client ID and Client Secret. You will need these later.
+- e. Click on the "Manage" button and copy the Client ID and Client Secret (```"New Secret" button```) to the same text file you used for the Spotify Client ID and Client Secret. You will need these later.
 
 
 ## Installation
@@ -166,41 +167,44 @@ iwr -useb get.scoop.sh | iex
 5. Setup your database:
 
   - a. Visit https://account.mongodb.com/account/login and log in or setup your MongoDB account.
+  > If this is your first time making an account with Mongo Atlas, choose Javascript as your preferred language.
   - b. Click on the "Create" button. Select the "Shared" option. Use AWS for the cloud provider. Select the "Free" option for the cluster tier, it should be the default "M0 Sandbox". Click on the "Create Cluster" button.
-  - c. Once the cluster is created, click on the "Connect" button. Click on the "Connect Your Application" button. Copy the connection string and save it to a text file. You will need this later.
+    - You will be prompted to make a database user. You can put anything for the user name, but usually you just put it as "admin". For the password, you can use a password generator to generate a secure password. Make sure to save the password somewhere safe. You will need it later.
+    - You will be prompted to add an IP address. You can add your current IP address.
+  - c. Once the cluster is created, click on the "Connect" button. Click on the "Connect Your Application" button. Copy the connection string and save it to a text file. You will need this later. ```Make sure the connection string is for the node.js driver.```
 
 
 <!-- CONFIGURATION -->
 
 ## Configuration
 
-1. Locate the .env.example file in the project directory and rename it to ```.env```
+1. Locate the .env.example file in in Visual Studio Code ```where all the files are on the left side``` and rename it to ```.env```
 2. Open the ```.env``` file and enter the following information:
 
 ### Spotify
 
 - `SPOTIFY_USERNAME`: Your Spotify username
-- `SPOTIFY_CLIENT_ID`: The Client ID you copied from the Spotify Developer Dashboard
-- `SPOTIFY_CLIENT_SECRET`: The Client Secret you copied from the Spotify Developer Dashboard
+- `SPOTIFY_CLIENT_ID`: The Client ID you copied in your notepad from the Spotify Developer Dashboard
+- `SPOTIFY_CLIENT_SECRET`: The Client Secret you copied in your notepad from the Spotify Developer Dashboard
 - `SPOTIFY_REDIRECT_URI`: http://localhost:8888/api/spotify/callback
 
 ### MongoDB
 
-- `MONGODB_URI`: The connection string you copied from the MongoDB website. Replace the `<password>` with the password you set for your MongoDB account.
+- `MONGODB_URI`: The connection string you copied from the MongoDB website. Replace the `<password>` with the password you set for your MongoDB account. REMOVE THE `< >` FROM THE PASSWORD.
 
 ### Twitch
 
 - `TWITCH_BOT_USERNAME`: The name you set for the Twitch application
 - `TWITCH_USERNAME`: Your Twitch username
-- `TWITCH_BROADCASTER_ID`: Your Twitch broadcaster ID, you can find your broadcaster ID by running the `!dr` command mentioned below. Please note that you will need to run the `!dr` command after you have <strong>finished</strong> setting up the bot. So come back to this step later.
+- `TWITCH_BROADCASTER_ID`: Your Twitch broadcaster ID, you can find your broadcaster ID by running the `!dr` command mentioned below. Please note that you will need to run the `!dr` command after you have <strong>finished</strong> setting up the bot. So ```come back``` to this step later.
 - `TWITCH_BOT_TOKEN`: Get your bot token at: https://twitchapps.com/tmi/
-- `TWITCH_CLIENT_ID`: The Client ID you copied from the Twitch Developer Console
-- `TWITCH_CLIENT_SECRET`: The Client Secret you copied from the Twitch Developer Console
+- `TWITCH_CLIENT_ID`: The Client ID you copied in your notepad from the Twitch Developer Console
+- `TWITCH_CLIENT_SECRET`: The Client Secret you copied in your notepad from the Twitch Developer Console
 - `TWITCH_REDIRECT_URI`: http://localhost:8888/api/twitch/callback
 
 #### To retrieve the reward IDs, run the `!dr` command in your Twitch chat. The reward IDs will be displayed in the console.<br />
 
-> Only run the `!dr` command after you have <strong>finished</strong> setting up the bot! So come back to this step later.
+> Only run the `!dr` command after you have <strong>finished</strong> setting up the bot! So ```come back``` to this step later.
 > <br />
 
 ##### Example output:
