@@ -129,7 +129,6 @@ iwr -useb get.scoop.sh | iex
 - d. Select the "Chat Bot" category then click on the "Create" button.
 - e. Click on the "Manage" button and copy the Client ID and Client Secret to the same text file you used for the Spotify Client ID and Client Secret. You will need these later.
 
-[<div style="text-align: right"> (back to top) </div>](#top)
 
 ## Installation
 
@@ -170,7 +169,6 @@ iwr -useb get.scoop.sh | iex
   - b. Click on the "Create" button. Select the "Shared" option. Use AWS for the cloud provider. Select the "Free" option for the cluster tier, it should be the default "M0 Sandbox". Click on the "Create Cluster" button.
   - c. Once the cluster is created, click on the "Connect" button. Click on the "Connect Your Application" button. Copy the connection string and save it to a text file. You will need this later.
 
-[<div style="text-align: right"> (back to top) </div>](#top)
 
 <!-- CONFIGURATION -->
 
@@ -218,7 +216,6 @@ iwr -useb get.scoop.sh | iex
 - `TWITCH_REWARD_ID_PENNY`: Reward ID goes here
 - `TWITCH_REWARD_ID_SKIP_SONG`: Reward ID goes here
 - `TWITCH_REWARD_ID_VOLUME`: Reward ID goes here
-[<div style="text-align: right"> (back to top) </div>](#top)
 
 #### Twitch Webhook
 
@@ -286,7 +283,6 @@ ngrok http 8888
 https://5d0b-123-456-789-123.ngrok.io
 ```
 
-[<div style="text-align: right"> (back to top) </div>](#top)
 
 # Okay I'm Done! Now What?
 - Visit http://localhost:8888/api/twitch/login to login to Twitch. Your Twitch access token and refresh token should now be logged directly into the MongoDB database.
@@ -305,7 +301,6 @@ https://5d0b-123-456-789-123.ngrok.io
 
 > If you encounter any issues, join the [Discord](https://discord.gg/PnsqWaVsqM) server and ask for help. I will be happy to help you out. When asking for help, please provide as much information as possible. For example, what error message you are getting, what you have tried so far, etc.
 
-[<div style="text-align: right"> (back to top) </div>](#top)
 <br /> <br />
 # <div id="accessrefresh">Access & Refresh Tokens</div>
 - I implemented a refresh token system for both Spotify and Twitch. So if your access token expires mid stream, the bot will automatically refresh the token for you. You don't have to worry about anything. Refresh tokens last for a decent bit of time, but when it does expire, the bot will notify you directly in chat telling you to have a look at the console. Then just visit the two login pages to get new access tokens and refresh tokens. The database will automatically update the new tokens for you, no need to termiate the bots session, just continue on with the stream!
@@ -334,5 +329,4 @@ git pull origin main
     <img src="images/donate.png" alt="Logo" width="100" height="100">
   </a>
 
-[<div style="text-align: right"> (back to top) </div>](#top)
 
