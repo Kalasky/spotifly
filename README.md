@@ -203,7 +203,7 @@ iwr -useb get.scoop.sh | iex
 
 - `TWITCH_BOT_USERNAME`: The name you set for the Twitch application
 - `TWITCH_USERNAME`: Your Twitch username __MAKE SURE IT IS ALL LOWERCASE__
-- `TWITCH_BROADCASTER_ID`: Your Twitch broadcaster ID, you can find your broadcaster ID by running the `!dr` command mentioned below. Please note that you will need to run the `!dr` command after you have <strong>finished</strong> setting up the bot. So `come back` to this step later.
+- `TWITCH_BROADCASTER_ID`: Your Twitch broadcaster ID, you can find your broadcaster ID by running the `!me` command in your twitch chat. Please note that you will need to run the `!me` command after you have <strong>finished</strong> setting up the bot. This step will be mentioned at the end of the setup process. 
 - `TWITCH_BOT_TOKEN`: Get your bot token at: https://twitchapps.com/tmi/
 - `TWITCH_CLIENT_ID`: The Client ID you copied in your notepad from the Twitch Developer Console
 - `TWITCH_CLIENT_SECRET`: The Client Secret you copied in your notepad from the Twitch Developer Console
@@ -211,7 +211,7 @@ iwr -useb get.scoop.sh | iex
 
 #### To retrieve the reward IDs, run the `!dr` command in your Twitch chat. The reward IDs will be displayed in the console.<br />
 
-> Only run the `!dr` command after you have <strong>finished</strong> setting up the bot! So `come back` to this step later.
+> Only run the `!dr` command after you have <strong>finished</strong> setting up the bot! This step will be mentioned at the end of the setup process. 
 > <br />
 
 ##### Example output:
@@ -298,7 +298,8 @@ https://5d0b-123-456-789-123.ngrok.io
 
 - Visit http://localhost:8888/api/twitch/login to login to Twitch. Your Twitch access token and refresh token should now be logged directly into the MongoDB database.
 - Then visit http://localhost:8888/api/spotify/login to login to Spotify. The spotify access token and refresh token should now be logged directly into the MongoDB database.
-- Now you can run the command `!dr` in your Twitch chat to get the reward IDs. The reward IDs will be displayed in the console. As well as your broadcaster ID!
+- Run the ```!me``` command in your Twitch chat to get your broadcaster ID. Copy the broadcaster ID and paste it into the .env file for the `TWITCH_BROADCASTER_ID` variable.
+- Now you can run the command `!dr` in your Twitch chat to get the reward IDs. The reward IDs will be displayed in the console.
 - Once the channel rewards have been created, feel free to modify them in your creator dashboard, it won't affect the bot.
   <br /><br />
 
