@@ -10,7 +10,7 @@
   <p align="center">
     Introducing Spotifly, the Twitch Spotify Bot that lets viewers control playback, search tracks, add to queue, see current song, and skip songs. Spotifly brings a new level of interactivity to Twitch streams, making music a shared experience. Future updates will add even more features to Spotifly, making it the go-to tool for streamers and viewers looking to enhance their musical experience on Twitch.
     <br />
-    <a href="https://discord.gg/PnsqWaVsqM"><strong>Join the Discord! »</strong></a>
+    <a href="https://discord.gg/HpAB5ymCgc"><strong>Join the Discord! »</strong></a>
     <br />
     <br />
   </p>
@@ -77,7 +77,7 @@ Spotifly is free to use, but if you appreciate the work that went into this proj
 
 ## NOTICE
 
-> <i> The setup process for Spotifly has a lot of moving parts, but I have tried to make the prcoess as easy as possible. If you have any questions or need help, please join the [Discord](https://discord.gg/PnsqWaVsqM) and ask for help in the #help-1 or #help-2 channel. I will be happy to help you get Spotifly up and running. If you have a development environment already up and running on your PC then this setup should feel familiar.<br /><br />With that out of the way, let's get started!</i>
+> <i> The setup process for Spotifly has a lot of moving parts, but I have tried to make the prcoess as easy as possible. If you have any questions or need help, please join the [Discord](https://discord.gg/HpAB5ymCgc) and ask for help in the #help-1 or #help-2 channel. I will be happy to help you get Spotifly up and running. If you have a development environment already up and running on your PC then this setup should feel familiar.<br /><br />With that out of the way, let's get started!</i>
 
 <!-- GETTING STARTED -->
 
@@ -303,7 +303,7 @@ https://5d0b-123-456-789-123.ngrok.io
 - Side note: You don't necissarily have to terminate the ngrok tunnel everytime you end stream. If you still have the same tunnel running since last stream, don't worry about pasting in a new https string into the ```.env``` file. 
   <br /><br />
 
-> If you encounter any issues, join the [Discord](https://discord.gg/PnsqWaVsqM) server and ask for help. I will be happy to help you out. When asking for help, please provide as much information as possible. For example, what error message you are getting, what you have tried so far, etc.
+> If you encounter any issues, join the [Discord](https://discord.gg/HpAB5ymCgc) server and ask for help. I will be happy to help you out. When asking for help, please provide as much information as possible. For example, what error message you are getting, what you have tried so far, etc.
 
 <br /> <br />
 # <div id="accessrefresh">Access & Refresh Tokens</div>
@@ -311,7 +311,7 @@ https://5d0b-123-456-789-123.ngrok.io
   <br /> <br />
 
 # <div id="updates">Updates</div>
-- I will continue to update this bot wih new features and bug fixes. Join the [Discord](https://discord.gg/PnsqWaVsqM) server to stay up to date with the latest updates.
+- I will continue to update this bot wih new features and bug fixes. Join the [Discord](https://discord.gg/HpAB5ymCgc) server to stay up to date with the latest updates.
 - Feel free to suggest new features that you think would be cool! It doesn't __need__ to be spotify related. I am open to any ideas.
 - When a new feature is released, you will be notified in the Discord server. 
 - To update the bot to the latest version, run the following command in the ```/spotifly/backend``` directory:
