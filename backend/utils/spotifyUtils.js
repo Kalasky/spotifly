@@ -4,7 +4,6 @@ const { spotifyHandler } = require('../middleware/spotifyRefreshHandler')
 const { setupTwitchClient } = require('./tmiSetup')
 const twitchClient = setupTwitchClient()
 
-
 const refreshMiddleware = async () => {
   await twitchHandler()
   await spotifyHandler()
@@ -24,13 +23,15 @@ const searchSong = async (query) => {
       },
     })
     const data = await res.json()
+    console.log(data)
+    
     let result = ''
     // concatenate the 5 search track names and links into the result string
     for (let i = 0; i < 5; i++) {
       result += `${i + 1}. ${data.tracks.items[i].name}\n`
       result += `${data.tracks.items[i].external_urls.spotify}\n`
     }
-    console.log('before send message')
+
     twitchClient.say(process.env.TWITCH_USERNAME, result)
   } catch (error) {
     console.log(error)
@@ -48,6 +49,8 @@ const pauseSong = async () => {
         'Content-Type': 'application/json',
       },
     })
+    const data = await res.json()
+    console.log(data)
     return res
   } catch (error) {
     console.log(error)
@@ -65,6 +68,8 @@ const resumeSong = async () => {
         'Content-Type': 'application/json',
       },
     })
+    const data = await res.json()
+    console.log(data)
     return res
   } catch (error) {
     console.log(error)
@@ -82,6 +87,8 @@ const skipSong = async () => {
         'Content-Type': 'application/json',
       },
     })
+    const data = await res.json()
+    console.log(data)
     return res
   } catch (error) {
     console.log(error)
@@ -100,11 +107,14 @@ const addToQueue = async (uri) => {
       },
     })
     console.log('addToQueue repsonse status:', res.status)
+    const data = await res.json()
+    console.log(data)
     return res
   } catch (error) {
     console.log(error)
     if (error.message === 'Error adding track to queue.' && error.status !== 401) {
-      twitchClient.say(process.env.TWITCH_USERNAME,
+      twitchClient.say(
+        process.env.TWITCH_USERNAME,
         'Invalid Spotify song link. Please try again. (Example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=32cfb1adf4b942d9)'
       )
     }
@@ -121,6 +131,8 @@ const changeVolume = async (volume) => {
         'Content-Type': 'application/json',
       },
     })
+    const data = await res.json()
+    console.log(data)
     return res
   } catch (error) {
     console.log(error)
@@ -140,7 +152,10 @@ const currentSong = async () => {
     })
     const data = await res.json()
     console.log(data)
-    twitchClient.say(process.env.TWITCH_USERNAME, `Now playing: ${data.item.name} by: ${data.item.artists[0].name} Link: ${data.item.external_urls.spotify}`)
+    twitchClient.say(
+      process.env.TWITCH_USERNAME,
+      `Now playing: ${data.item.name} by: ${data.item.artists[0].name} Link: ${data.item.external_urls.spotify}`
+    )
   } catch (error) {
     console.log(error)
   }

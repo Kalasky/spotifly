@@ -19,6 +19,7 @@ const MESSAGE_TYPE_REVOCATION = 'revocation'
 const HMAC_PREFIX = 'sha256='
 
 router.post('/twitch/eventsub', async (req, res) => {
+  console.log('eventsub route hit')
   let secret = getSecret()
   let message = getHmacMessage(req)
   let hmac = HMAC_PREFIX + getHmac(secret, message) // signature to compare
@@ -33,22 +34,22 @@ router.post('/twitch/eventsub', async (req, res) => {
     if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {
       switch (notification.event.reward.id) {
         case process.env.TWITCH_REWARD_ID_SPOTIFY:
-          console.log(`Recieved ${notification.event.reward.title}`)
+          console.log(`Received ${notification.event.reward.title}`)
           channelRewards.addToSpotifyQueue()
           res.sendStatus(204)
           break
         case process.env.TWITCH_REWARD_ID_PENNY:
-          console.log(`Recieved ${notification.event.reward.title}`)
+          console.log(`Received ${notification.event.reward.title}`)
           channelRewards.incrementCost()
           res.sendStatus(204)
           break
         case process.env.TWITCH_REWARD_ID_SKIP_SONG:
-          console.log(`Recieved ${notification.event.reward.title}`)
+          console.log(`Received ${notification.event.reward.title}`)
           channelRewards.skipSpotifySong()
           res.sendStatus(204)
           break
         case process.env.TWITCH_REWARD_ID_VOLUME:
-          console.log(`Recieved ${notification.event.reward.title}`)
+          console.log(`Received ${notification.event.reward.title}`)
           channelRewards.changeSpotifyVolume()
           res.sendStatus(204)
           break
