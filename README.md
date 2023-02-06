@@ -316,6 +316,23 @@ https://5d0b-123-456-789-123.ngrok.io
 > If you encounter any issues, join the [Discord](https://discord.gg/HpAB5ymCgc) server and ask for help. I will be happy to help you out. When asking for help, please provide as much information as possible. For example, what error message you are getting, what you have tried so far, etc.
 
 <br /> <br />
+# <div id="commands">Twitch Chat Commands</div>
+- Streamer Commands
+  - `!defaultrewards` - Create the default channel rewards
+  - `!ces` - Create Event Subscriptions
+  - `!des` - Delete Event Subscriptions
+  - `!dr` - Display Reward IDs
+  - `!me` - Display your user information
+  - `!blacklist (username)` - Blacklist a user from queueing songs
+  - `!unblacklist (username)` - Unblacklist a user from queueing songs
+  - `!rewards` - Display the channel rewards
+  - `!songduration (seconds)` - Block songs that are longer than the specified duration
+- Viewer Commands
+  - `!np` - Display the currently playing song
+  - `!ss (song name)` - Search for a song (top 5 results will be displayed)
+<br /><br /> 
+
+
 
 # <div id="accessrefresh">Access & Refresh Tokens</div>
 
