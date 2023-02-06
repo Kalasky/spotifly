@@ -3,6 +3,20 @@ const twitchClient = twitchClientSetup.setupTwitchClient()
 const { searchSong } = require('./spotifyUtils')
 const { createEventSub, getAllRewards, dumpEventSubs, eventSubList, createReward, getUser } = require('./twitchUtils')
 const { currentSong } = require('./spotifyUtils')
+const User = require('../models/User')
+
+const updateSongDurationLimit = async (newDuration) => {
+  try {
+    const user = await User.findOneAndUpdate(
+      { twitchUsername: process.env.TWITCH_USERNAME },
+      { $set: { songDurationLimit: newDuration } },
+      { new: true }
+    )
+    return user
+  } catch (error) {
+    console.log(error)
+  }
+}
 
 const searchSongCommand = () => {
   twitchClient.on('message', (channel, tags, message, self) => {
@@ -91,13 +105,47 @@ const createDefaultChannelRewards = () => {
     const command = message.slice(1).split(' ')[0].toLowerCase()
     if (command === 'defaultrewards' || (command === 'dr' && tags.username === process.env.TWITCH_USERNAME)) {
       createReward('Skip Song', 'Skip the current song', 1000, '#F33A22', false, false, 0)
-      createReward('Change Song Volume', 'Enter any number between 0 and 100 to change the volume of the current song.', 500, '#43C4EB', true, false, 0)
-      createReward('Drop a penny in the well!', 'Every time this reward is redeemed, the cost will increase in value by 1 channel point.', 1, '#77FF83', false, false, 0)
+      createReward(
+        'Change Song Volume',
+        'Enter any number between 0 and 100 to change the volume of the current song.',
+        500,
+        '#43C4EB',
+        true,
+        false,
+        0
+      )
+      createReward(
+        'Drop a penny in the well!',
+        'Every time this reward is redeemed, the cost will increase in value by 1 channel point.',
+        1,
+        '#77FF83',
+        false,
+        false,
+        0
+      )
       createReward('Song Submission', 'Submit a spotify *song link* directly to the queue! ', 250, '#392e5c', true, true, 30)
     }
   })
 }
 
+let maxDuration = 600000
+
+const songDurationCommand = () => {
+  twitchClient.on('message', (channel, tags, message, self) => {
+    if (self) return
+    const command = message.slice(1).split(' ')[0].toLowerCase()
+    const newDuration = parseInt(message.slice(1).split(' ')[1])
+    if (command === 'songduration' || (command === 'sd' && tags.username === process.env.TWITCH_USERNAME)) {
+      if (!isNaN(newDuration) && newDuration > 0) {
+        maxDuration = newDuration * 1000 // convert to milliseconds
+        updateSongDurationLimit(maxDuration)
+        twitchClient.say(process.env.TWITCH_USERNAME, `Song duration has been set to ${newDuration} seconds.`)
+      } else {
+        twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a valid number of seconds.`)
+      }
+    }
+  })
+}
 
 module.exports = {
   currentSongCommand,
@@ -107,5 +155,6 @@ module.exports = {
   searchSongCommand,
   createEventSubCommand,
   createDefaultChannelRewards,
-  getStreamerData
+  getStreamerData,
+  songDurationCommand,
 }

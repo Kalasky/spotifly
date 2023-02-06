@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema(
     twitchUsername: String,
     twitchAccessToken: String,
     twitchRefreshToken: String,
+    songDurationLimit: Number,
   },
   { timestamps: true }
 )

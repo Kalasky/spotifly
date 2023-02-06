@@ -80,9 +80,30 @@ const addToSpotifyQueue = async () => {
       // remove the ?si=... from the link
       let trackId = newLink.substring(0, newLink.indexOf('?'))
 
-      // if https://open.spotify.com/artist/ is in the trackId, then it's an artist link, send error
-      if (trackId.includes('https://open.spotify.com/artist/')) {
-        twitchClient.say(process.env.TWITCH_USERNAME, "You can't add an artist link to the queue!")
+      // check if the link is not a track link
+      if (!trackId.includes('spotify:track:')) {
+        twitchClient.say(process.env.TWITCH_USERNAME, 'Sorry, that is not a track link.')
+        return
+      }
+
+      // get only the track id from the link
+      const trackIdOnly = trackId.substring(trackId.lastIndexOf(':') + 1)
+
+      // check length of song and return if it is longer than 10 minutes
+      const getTrackLength = await fetch(`https://api.spotify.com/v1/tracks/${trackIdOnly}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${user.spotifyAccessToken}`,
+        },
+      })
+
+      const trackLength = await getTrackLength.json()
+      console.log('user.songDurationLimit', user.songDurationLimit)
+      if (trackLength.duration_ms > user.songDurationLimit) {
+        twitchClient.say(
+          process.env.TWITCH_USERNAME,
+          `Sorry, that song is too long. The max duration is ${(user.songDurationLimit / 60000).toFixed(1)} minutes.`
+        )
         return
       }
 
