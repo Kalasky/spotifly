@@ -61,6 +61,7 @@
     </li>
     <li><a href="#okay-im-done-now-what">Okay I'm Done! Now What?</a></li>
     <li><a href="#process">Process For Starting & Ending Stream</a></li>
+    <li><a href="#commands">Bot Commands</a></li>
     <li><a href="#accessrefresh">Access & Refresh Token Handling</a></li>
     <li><a href="#updates">Updates</a></li>
     <li><a href="#contributing">Contributing</a></li>
