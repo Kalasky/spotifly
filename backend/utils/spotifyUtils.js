@@ -107,8 +107,6 @@ const addToQueue = async (uri) => {
       },
     })
     console.log('addToQueue repsonse status:', res.status)
-    const data = await res.json()
-    console.log(data)
     return res
   } catch (error) {
     console.log(error)
