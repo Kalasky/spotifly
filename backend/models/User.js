@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema(
     twitchAccessToken: String,
     twitchRefreshToken: String,
     songDurationLimit: Number,
+    blacklist: [String]
   },
   { timestamps: true }
 )

@@ -70,6 +70,13 @@ const addToSpotifyQueue = async () => {
       }
       // grab the latest track link from the array of unfulfilled rewards
       latestReward = data.data[data.data.length - 1].user_input
+
+      // check if the requester is blacklisted
+      if (user.blacklist.includes(data.data[data.data.length - 1].user_name)) {
+        twitchClient.say(process.env.TWITCH_USERNAME, `Sorry, ${data.data[data.data.length - 1].user_name} is blacklisted.`)
+        return
+      }
+
       hasMore = data.pagination.cursor !== null
       after = data.pagination.cursor
     }

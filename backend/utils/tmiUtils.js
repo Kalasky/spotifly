@@ -5,6 +5,7 @@ const { createEventSub, getAllRewards, dumpEventSubs, eventSubList, createReward
 const { currentSong } = require('./spotifyUtils')
 const User = require('../models/User')
 
+// utils
 const updateSongDurationLimit = async (newDuration) => {
   try {
     const user = await User.findOneAndUpdate(
@@ -16,6 +17,51 @@ const updateSongDurationLimit = async (newDuration) => {
   } catch (error) {
     console.log(error)
   }
+}
+
+const removeFromBlacklist = async (username) => {
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
+  // find the index of the username in the blacklist array
+  const index = user.blacklist.indexOf(username)
+  if (index > -1) {
+    user.blacklist.splice(index, 1)
+    console.log(`Removed ${username} from the blacklist`)
+    await user.save()
+  }
+}
+
+const addToBlacklist = async (username) => {
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
+  user.blacklist.push(username)
+  console.log(`Added ${username} to the blacklist`)
+  await user.save()
+}
+
+// commands
+const blacklistCommand = () => {
+  twitchClient.on('message', (channel, tags, message, self) => {
+    if (self) return
+    const args = message.slice(1).split(' ')
+    const command = args.shift().toLowerCase()
+
+    if (command === 'blacklist' && tags.username === process.env.TWITCH_USERNAME) {
+      addToBlacklist(args[0])
+      twitchClient.say(process.env.TWITCH_USERNAME, `Added ${args[0]} to the blacklist.`)
+    }
+  })
+}
+
+const unblacklistCommand = () => {
+  twitchClient.on('message', (channel, tags, message, self) => {
+    if (self) return
+    const args = message.slice(1).split(' ')
+    const command = args.shift().toLowerCase()
+
+    if (command === 'unblacklist' && tags.username === process.env.TWITCH_USERNAME) {
+      removeFromBlacklist(args[0])
+      twitchClient.say(process.env.TWITCH_USERNAME, `Removed ${args[0]} from the blacklist.`)
+    }
+  })
 }
 
 const searchSongCommand = () => {
@@ -157,4 +203,6 @@ module.exports = {
   createDefaultChannelRewards,
   getStreamerData,
   songDurationCommand,
+  blacklistCommand,
+  unblacklistCommand,
 }

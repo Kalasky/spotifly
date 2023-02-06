@@ -58,6 +58,8 @@ const {
   createDefaultChannelRewards,
   getStreamerData,
   songDurationCommand,
+  blacklistCommand,
+  unblacklistCommand,
 } = require('./utils/tmiUtils')
 
 currentSongCommand()
@@ -69,3 +71,5 @@ createEventSubCommand()
 createDefaultChannelRewards()
 getStreamerData()
 songDurationCommand()
+blacklistCommand()
+unblacklistCommand()
