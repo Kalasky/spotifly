@@ -51,6 +51,7 @@ const twitchRefreshAccessTokenMiddleware = async (req, res, next) => {
 
     // If the request is successful, continue with the current access token
     if (response.ok) {
+      console.log('Twitch access token is valid.')
       req.user = user
       next()
     }
@@ -83,6 +84,10 @@ const twitchHandler = async () => {
         'Client-ID': process.env.TWITCH_CLIENT_ID,
       },
     })
+
+    if (response.ok) {
+      console.log('Twitch access token is valid.')
+    }
 
     // If the request fails with a "401 Unauthorized" error, generate a new access token
     if (response.status === 401) {

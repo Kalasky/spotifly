@@ -50,6 +50,7 @@ const spotifyRefreshAccessTokenMiddleware = async (req, res, next) => {
     })
     // If the request is successful, continue with the current access token
     if (response.ok) {
+      console.log('Spotify access token is valid.')
       req.user = user
       next()
     }
@@ -88,6 +89,10 @@ const spotifyHandler = async () => {
         'Content-Type': 'application/json',
       },
     })
+
+    if (response.ok) {
+      console.log('Spotify access token is valid.')
+    }
 
     // If the request fails with a "401 Unauthorized" error, generate a new access token
     if (response.status === 401) {

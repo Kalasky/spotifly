@@ -120,18 +120,8 @@ const addToQueue = async (uri) => {
     return res
   } catch (error) {
     console.log(error)
-    switch (error.message) {
-      case 'Error adding track to queue.':
-        if (error.status !== 401) {
-          twitchClient.say(
-            process.env.TWITCH_USERNAME,
-            'Invalid Spotify song link. Please try again. (Example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=32cfb1adf4b942d9)'
-          )
-        }
-        break
-      case 404:
-        twitchClient.say(process.env.TWITCH_USERNAME, 'No active device found.')
-        break
+    if (error.status === 404) {
+      twitchClient.say(process.env.TWITCH_USERNAME, 'No active device found. The streamer must be playing music to add a song to the queue.')
     }
   }
 }
