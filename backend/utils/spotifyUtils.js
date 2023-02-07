@@ -24,7 +24,7 @@ const searchSong = async (query) => {
     })
     const data = await res.json()
     console.log(data)
-    
+
     let result = ''
     // concatenate the 5 search track names and links into the result string
     for (let i = 0; i < 5; i++) {
@@ -106,15 +106,32 @@ const addToQueue = async (uri) => {
         'Content-Type': 'application/json',
       },
     })
-    console.log('addToQueue repsonse status:', res.status)
+    console.log('addToQueue response status:', res.status)
+    if (res.status === 204) {
+      console.log('Successful request, no content to return.')
+    } else {
+      try {
+        const data = await res.json()
+        console.log(data)
+      } catch (error) {
+        console.error(`An error occurred while parsing the JSON data: ${error}`)
+      }
+    }
     return res
   } catch (error) {
     console.log(error)
-    if (error.message === 'Error adding track to queue.' && error.status !== 401) {
-      twitchClient.say(
-        process.env.TWITCH_USERNAME,
-        'Invalid Spotify song link. Please try again. (Example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=32cfb1adf4b942d9)'
-      )
+    switch (error.message) {
+      case 'Error adding track to queue.':
+        if (error.status !== 401) {
+          twitchClient.say(
+            process.env.TWITCH_USERNAME,
+            'Invalid Spotify song link. Please try again. (Example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=32cfb1adf4b942d9)'
+          )
+        }
+        break
+      case 404:
+        twitchClient.say(process.env.TWITCH_USERNAME, 'No active device found.')
+        break
     }
   }
 }
