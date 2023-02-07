@@ -108,7 +108,7 @@ const addToQueue = async (uri) => {
     })
     console.log('addToQueue response status:', res.status)
     if (res.status === 204) {
-      console.log('Successful request, no content to return.')
+      twitchClient.say(process.env.TWITCH_USERNAME, 'Song added to queue.')
     } else {
       try {
         const data = await res.json()
