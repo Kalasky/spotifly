@@ -32,16 +32,11 @@ const removeFromBlacklist = async (username) => {
 
 const addToBlacklist = async (username) => {
   const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
-  // if user is already in the blacklist, return
-  if (user.blacklist.includes(username)) {
-    twitchClient.say(process.env.TWITCH_USERNAME, `User is already blacklisted.`)
-    return
-  } else {
-    user.blacklist.push(username)
-    console.log(`Added ${username} to the blacklist`)
-  }
+  user.blacklist.push(username)
+  console.log(`Added ${username} to the blacklist`)
   await user.save()
 }
+
 
 // commands
 const blacklistCommand = () => {
