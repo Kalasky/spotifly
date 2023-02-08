@@ -119,6 +119,7 @@ const rewardsCommand = () => {
   twitchClient.on('message', (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
+    
     if (command === 'rewards' || (command === 'r' && tags.username === process.env.TWITCH_USERNAME)) {
       getAllRewards()
     }
