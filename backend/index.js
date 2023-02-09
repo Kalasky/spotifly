@@ -63,7 +63,8 @@ const {
   removeSongFromPlaylistCommand,
   clearPlaylistCommand,
   deletePlaylistCommand,
-  showPlaylistsCommand
+  showPlaylistsCommand,
+  viewPlaylistCommand,
 } = require('./utils/tmiUtils')
 
 currentSongCommand()
@@ -81,3 +82,4 @@ removeSongFromPlaylistCommand()
 clearPlaylistCommand()
 deletePlaylistCommand()
 showPlaylistsCommand()
+viewPlaylistCommand()

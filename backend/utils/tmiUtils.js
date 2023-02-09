@@ -9,6 +9,7 @@ const {
   clearPlaylist,
   deletePlaylist,
   showPlaylists,
+  viewPlaylist,
 } = require('./spotifyUtils')
 const User = require('../models/User')
 
@@ -306,7 +307,7 @@ const removeSongFromPlaylistCommand = async () => {
           // prompt user to confirm removal of song
           twitchClient.say(
             process.env.TWITCH_USERNAME,
-            `Are you sure you want to remove ${track.name} by ${track.artists[0].name} from the ${playlist} playlist?`
+            `Are you sure you want to remove ${track.name} by ${track.artists[0].name} from the ${playlist} playlist? Respond with !yes or !no.`
           )
           // listen for user response
           twitchClient.on('message', async (channel, tags, message, self) => {
@@ -428,6 +429,18 @@ const showPlaylistsCommand = async () => {
   })
 }
 
+const viewPlaylistCommand = async () => {
+  await refreshMiddleware()
+  twitchClient.on('message', async (channel, tags, message, self) => {
+    if (self) return
+    const command = message.slice(1).split(' ')[0].toLowerCase()
+    const playlist = message.slice(1).split(' ')[1]
+    if (command === 'viewplaylist' || command === 'vp') {
+      await viewPlaylist(tags.username, playlist)
+    }
+  })
+}
+
 module.exports = {
   currentSongCommand,
   eventSubListCommand,
@@ -444,4 +457,5 @@ module.exports = {
   clearPlaylistCommand,
   deletePlaylistCommand,
   showPlaylistsCommand,
+  viewPlaylistCommand,
 }
