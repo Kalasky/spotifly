@@ -1,9 +1,17 @@
 const twitchClientSetup = require('./tmiSetup')
 const twitchClient = twitchClientSetup.setupTwitchClient()
-const { searchSong } = require('./spotifyUtils')
 const { createEventSub, getAllRewards, dumpEventSubs, eventSubList, createReward, getUser } = require('./twitchUtils')
-const { currentSong } = require('./spotifyUtils')
+const { currentSong, addTracksToPlaylist, searchSong } = require('./spotifyUtils')
 const User = require('../models/User')
+
+// middleware
+const { twitchHandler } = require('../middleware/twitchRefreshHandler')
+const { spotifyHandler } = require('../middleware/spotifyRefreshHandler')
+
+const refreshMiddleware = async () => {
+  await twitchHandler()
+  await spotifyHandler()
+}
 
 // utils
 const updateSongDurationLimit = async (newDuration) => {
@@ -14,6 +22,23 @@ const updateSongDurationLimit = async (newDuration) => {
       { new: true }
     )
     return user
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const getTrack = async (query) => {
+  await refreshMiddleware()
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
+  try {
+    const getTrack = await fetch(`https://api.spotify.com/v1/tracks/${query}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${user.spotifyAccessToken}`,
+      },
+    })
+    const track = await getTrack.json()
+    return track
   } catch (error) {
     console.log(error)
   }
@@ -109,7 +134,7 @@ const rewardsCommand = () => {
   twitchClient.on('message', (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
-    
+
     if (command === 'rewards' || (command === 'r' && tags.username === process.env.TWITCH_USERNAME)) {
       getAllRewards()
     }
@@ -184,6 +209,65 @@ const songDurationCommand = () => {
   })
 }
 
+const addToPlaylistCommand = async () => {
+  await refreshMiddleware()
+  twitchClient.on('message', async (channel, tags, message, self) => {
+    let trackId
+    let newLink
+    if (self) return
+    const command = message.slice(1).split(' ')[0].toLowerCase()
+    const playlist = message.slice(1).split(' ')[1]
+    const song = message.slice(1).split(' ').slice(2).join(' ')
+    if (command === 'addtoplaylist' || command === 'atp') {
+      if (!playlist) {
+        twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a playlist name.`)
+        return
+      }
+      if (!song) {
+        twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a spotify song link or name.`)
+        return
+      }
+      if (playlist && song) {
+        // if song is a spotify link, add it to the playlist
+        if (song.includes('https://open.spotify.com/track/') && song.includes('?si')) {
+          newLink = song.replace('https://open.spotify.com/track/', 'spotify:track:')
+          // remove any query params from the link
+          trackId = newLink.substring(0, newLink.indexOf('?'))
+
+          // get only the track id from the link so we can get the track name
+          const trackIdOnly = trackId.substring(trackId.lastIndexOf(':') + 1)
+          // get the track name from the track id
+          const track = await getTrack(trackIdOnly)
+
+          addTracksToPlaylist(tags.username, playlist, trackId, track.name, track.artists[0].name)
+
+          // if the song is a spotify link without query params
+        } else if (song.includes('https://open.spotify.com/') && !song.includes('?si')) {
+          newLink = song.replace('https://open.spotify.com/track/', 'spotify:track:')
+          // get only the track id from the link
+          const trackIdOnly = newLink.substring(newLink.lastIndexOf(':') + 1)
+          // get the track name from the track id
+          const track = await getTrack(trackIdOnly)
+          addTracksToPlaylist(tags.username, playlist, newLink, track.name, track.artists[0].name)
+          return
+        }
+        // if the song is not a spotify link, search for it on spotify
+        else if (!song.includes('https://open.spotify.com/')) {
+          const songResult = await searchSong(song)
+          // extract the track id from the search result
+          const trackId = songResult.substring(songResult.lastIndexOf(':') + 1)
+          // get the track name from the track id
+          const track = await getTrack(trackId)
+          addTracksToPlaylist(tags.username, playlist, songResult, track.name, track.artists[0].name)
+          return
+        }
+      } else {
+        twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a valid song.`)
+      }
+    }
+  })
+}
+
 module.exports = {
   currentSongCommand,
   eventSubListCommand,
@@ -195,4 +279,5 @@ module.exports = {
   songDurationCommand,
   blacklistCommand,
   unblacklistCommand,
+  addToPlaylistCommand,
 }
