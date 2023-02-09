@@ -15,7 +15,7 @@ const searchSong = async (query) => {
   await refreshMiddleware()
   const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
   try {
-    const res = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=track&limit=5`, {
+    const res = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${user.spotifyAccessToken}`,
@@ -23,16 +23,15 @@ const searchSong = async (query) => {
       },
     })
     const data = await res.json()
-    console.log(data)
 
-    let result = ''
-    // concatenate the 5 search track names and links into the result string
-    for (let i = 0; i < 5; i++) {
-      result += `${i + 1}. ${data.tracks.items[i].name}\n`
-      result += `${data.tracks.items[i].external_urls.spotify}\n`
+    // if no song is found, return an error message
+    if (!data.tracks.items[0]) {
+      twitchClient.say(process.env.TWITCH_USERNAME, 'No song found from Spotify. Please try again.')
+      return
     }
 
-    twitchClient.say(process.env.TWITCH_USERNAME, result)
+    const trackId = data.tracks.items[0].uri
+    return trackId
   } catch (error) {
     console.log(error)
   }
@@ -96,7 +95,8 @@ const skipSong = async () => {
 }
 
 // this function will add a song to the user's queue
-const addToQueue = async (uri) => {
+const addToQueue = async (uri, username) => {
+  console.log('uri:', uri, 'username:', username)
   const user = await User.findOne({ spotifyUsername: process.env.SPOTIFY_USERNAME })
   try {
     let res = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
@@ -107,8 +107,9 @@ const addToQueue = async (uri) => {
       },
     })
     console.log('addToQueue response status:', res.status)
+
     if (res.status === 204) {
-      twitchClient.say(process.env.TWITCH_USERNAME, 'Song added to queue.')
+      twitchClient.say(process.env.TWITCH_USERNAME, `@${username}'s song has been added to the queue!`)
     } else {
       try {
         const data = await res.json()
@@ -121,7 +122,10 @@ const addToQueue = async (uri) => {
   } catch (error) {
     console.log(error)
     if (error.status === 404) {
-      twitchClient.say(process.env.TWITCH_USERNAME, 'No active device found. The streamer must be playing music to add a song to the queue.')
+      twitchClient.say(
+        process.env.TWITCH_USERNAME,
+        'No active device found. The streamer must be playing music to add a song to the queue.'
+      )
     }
   }
 }
