@@ -323,6 +323,32 @@ const showPlaylists = async (twitchUsername) => {
   )
 }
 
+const viewPlaylist = async (twitchUsername, playlistName) => {
+  const viewer = await Viewer.findOne({ twitchUsername })
+
+  if (viewer) {
+    const playlist = viewer.playlists.find((p) => p.playlistName === playlistName)
+
+    if (playlist) {
+      const songs = playlist.songs
+      // check if the playlist is empty
+      if (songs.length === 0) {
+        twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, the ${playlistName} playlist is empty!`)
+        return
+      }
+      // loop through the songs in the playlist and send them one by one to the chat
+      twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, the songs in your ${playlistName} playlist are:`)
+      songs.forEach((s, index) => {
+        twitchClient.say(process.env.TWITCH_USERNAME, `${index + 1}. ${s.name} - ${s.artist}`)
+      })
+      return
+    }
+    twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have a playlist named ${playlistName}!`)
+    return
+  }
+  twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have any playlists!`)
+}
+
 // this function will play all songs in a playlist
 const playPlaylist = async (twitchUsername, playlistName) => {
   const viewer = await Viewer.findOne({ twitchUsername })
@@ -357,4 +383,5 @@ module.exports = {
   clearPlaylist,
   deletePlaylist,
   showPlaylists,
+  viewPlaylist,
 }
