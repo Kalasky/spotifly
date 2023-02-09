@@ -90,11 +90,6 @@ const addToSpotifyQueue = async () => {
       // remove the ?si=... from the link
       let trackId = newLink.substring(0, newLink.indexOf('?'))
 
-      // if link doesnt have a ? in it, it means it doesnt have any query params
-      if (!newLink.includes('?')) {
-        trackId = newLink
-      }
-
       // check if the link is not a track link
       if (!trackId.includes('spotify:track:')) {
         const searchResult = await searchSong(latestReward)
@@ -118,7 +113,7 @@ const addToSpotifyQueue = async () => {
           Authorization: `Bearer ${user.spotifyAccessToken}`,
         },
       })
-
+      
       const trackLength = await getTrackLength.json()
       console.log('user.songDurationLimit', user.songDurationLimit)
       if (trackLength.duration_ms > user.songDurationLimit) {
