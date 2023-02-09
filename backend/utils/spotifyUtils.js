@@ -226,26 +226,122 @@ const addTracksToPlaylist = async (twitchUsername, playlistName, link, name, art
   }
 }
 
-// this function will play all songs in a playlist
-const playAllTracksFromPlaylist = async (twitch_username, playlist_name) => {
-  const viewer = await Viewer.findOne({ twitchUsername: twitch_username })
+const removeTracksFromPlaylist = async (twitchUsername, playlistName, name, artist) => {
+  const viewer = await Viewer.findOne({ twitchUsername })
 
   if (viewer) {
-    const playlist = viewer.playlists.find((playlist) => playlist.playlistName === playlist_name)
+    // loop through the viewer's playlists and check if the playlist already exists
+    const playlist = viewer.playlists.find((p) => p.playlistName === playlistName)
+
     if (playlist) {
-      // add all songs to the queue
-      playlist.songs.forEach(async (song) => {
-        await addToQueue(song, twitch_username)
+      // check if the song & artist is already in an object within the playlist
+      const song = playlist.songs.find((s) => s.name === name && s.artist === artist)
+
+      if (song) {
+        // remove the song from the playlist
+        playlist.songs = playlist.songs.filter((s) => s.name !== name && s.artist !== artist)
+        await viewer.save()
+        twitchClient.say(
+          process.env.TWITCH_USERNAME,
+          `@${twitchUsername} has removed ${name} from their ${playlistName} playlist!`
+        )
+        return
+      }
+      twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, ${name} is not in your ${playlistName} playlist!`)
+      return
+    }
+    twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have a playlist named ${playlistName}!`)
+    return
+  }
+  twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have any playlists!`)
+}
+
+const clearPlaylist = async (twitchUsername, playlistName) => {
+  const viewer = await Viewer.findOne({ twitchUsername })
+
+  if (viewer) {
+    // loop through the viewer's playlists and check if the playlist already exists
+    const playlist = viewer.playlists.find((p) => p.playlistName === playlistName)
+
+    if (playlist) {
+      if (playlist.songs.length === 0) {
+        twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, your ${playlistName} playlist is already empty!`)
+        return
+      }
+      // clear the playlist
+      playlist.songs = []
+      await viewer.save()
+
+      twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername} has cleared their ${playlistName} playlist!`)
+      return
+    }
+    twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have a playlist named ${playlistName}!`)
+    return
+  }
+  twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have any playlists!`)
+}
+const deletePlaylist = async (twitchUsername, playlistName) => {
+  const viewer = await Viewer.findOne({ twitchUsername })
+
+  if (viewer) {
+    // loop through the viewer's playlists and check if the playlist already exists
+    const playlist = viewer.playlists.find((p) => p.playlistName === playlistName)
+
+    if (playlist) {
+      // remove the playlist from the viewer's document
+      viewer.playlists = viewer.playlists.filter((p) => p.playlistName !== playlistName)
+      await viewer.save()
+
+      twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername} has deleted their ${playlistName} playlist!`)
+      return
+    }
+    twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have a playlist named ${playlistName}!`)
+    return
+  }
+  twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have any playlists!`)
+}
+
+const showPlaylists = async (twitchUsername) => {
+  const viewer = await Viewer.findOne({ twitchUsername })
+
+  if (viewer) {
+    if (viewer.playlists.length === 0) {
+      twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have any playlists!`)
+      return
+    }
+    // loop through the viewer's playlists and check if the playlist already exists
+    twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, your playlists are:`)
+    viewer.playlists.forEach((p, index) => {
+      twitchClient.say(process.env.TWITCH_USERNAME, `${index + 1}. ${p.playlistName}`)
+    })
+    return
+  }
+  // if the viewer doesn't exist, they don't have any playlists
+  twitchClient.say(
+    process.env.TWITCH_USERNAME,
+    `@${twitchUsername}, you have never made a playlist! Make one with !atp <playlist name> <song name>`
+  )
+}
+
+// this function will play all songs in a playlist
+const playPlaylist = async (twitchUsername, playlistName) => {
+  const viewer = await Viewer.findOne({ twitchUsername })
+
+  if (viewer) {
+    // loop through the viewer's playlists and check if the playlist already exists
+    const playlist = viewer.playlists.find((p) => p.playlistName === playlistName)
+
+    if (playlist) {
+      // loop through the songs in the playlist and add them to the queue
+      playlist.songs.forEach((song) => {
+        addToQueue(song.link, song.name, song.artist)
       })
       return
     }
-    twitchClient.say(process.env.TWITCH_USERNAME, `@${twitch_username} you don't have a playlist named ${playlist_name}!`)
+    twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have a playlist named ${playlistName}!`)
     return
   }
-  twitchClient.say(
-    process.env.TWITCH_USERNAME,
-    `@${twitch_username} you need to create a playlist first. Type !atp <playlist_name> <song> to create a playlist.`
-  )
+  twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have any playlists!`)
 }
 
 module.exports = {
@@ -257,4 +353,8 @@ module.exports = {
   currentSong,
   searchSong,
   addTracksToPlaylist,
+  removeTracksFromPlaylist,
+  clearPlaylist,
+  deletePlaylist,
+  showPlaylists,
 }

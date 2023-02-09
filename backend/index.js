@@ -59,7 +59,11 @@ const {
   songDurationCommand,
   blacklistCommand,
   unblacklistCommand,
-  addToPlaylistCommand
+  addToPlaylistCommand,
+  removeSongFromPlaylistCommand,
+  clearPlaylistCommand,
+  deletePlaylistCommand,
+  showPlaylistsCommand
 } = require('./utils/tmiUtils')
 
 currentSongCommand()
@@ -73,3 +77,7 @@ songDurationCommand()
 blacklistCommand()
 unblacklistCommand()
 addToPlaylistCommand()
+removeSongFromPlaylistCommand()
+clearPlaylistCommand()
+deletePlaylistCommand()
+showPlaylistsCommand()
