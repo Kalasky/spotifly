@@ -70,22 +70,6 @@ const unblacklistCommand = () => {
   })
 }
 
-const searchSongCommand = () => {
-  twitchClient.on('message', (channel, tags, message, self) => {
-    if (self) return
-    const args = message.slice(1).split(' ')
-    const command = args.shift().toLowerCase()
-
-    if (command === 'spotifysearch' || command === 'ss') {
-      searchSong(args.join(' '))
-    }
-
-    if (command === 'ss' && args.length === 0) {
-      twitchClient.say(process.env.TWITCH_USERNAME, 'Please enter a track name to search for i.e. !ss bad habit.')
-    }
-  })
-}
-
 const getStreamerData = () => {
   twitchClient.on('message', (channel, tags, message, self) => {
     if (self) return
@@ -205,7 +189,6 @@ module.exports = {
   eventSubListCommand,
   rewardsCommand,
   dumpEventSubsCommand,
-  searchSongCommand,
   createEventSubCommand,
   createDefaultChannelRewards,
   getStreamerData,

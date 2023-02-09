@@ -1,6 +1,6 @@
 const User = require('../models/User')
 const twitchUtils = require('../utils/twitchUtils')
-const { addToQueue, skipSong, changeVolume } = require('../utils/spotifyUtils')
+const { addToQueue, skipSong, changeVolume, searchSong } = require('../utils/spotifyUtils')
 const { setupTwitchClient } = require('./tmiSetup')
 const twitchClient = setupTwitchClient()
 
@@ -49,6 +49,8 @@ const addToSpotifyQueue = async () => {
     let hasMore = true
     let after = ''
     let latestReward = ''
+    let latestUsername = ''
+    let data = []
     while (hasMore) {
       const res = await fetch(
         `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID_SPOTIFY}&status=UNFULFILLED&first=50&after=${after}`,
@@ -61,7 +63,7 @@ const addToSpotifyQueue = async () => {
           },
         }
       )
-      const data = await res.json()
+      data = await res.json()
       // if there are no more redemptions, break out of the loop
       if (data.data.length === 0) {
         hasMore = false
@@ -70,9 +72,11 @@ const addToSpotifyQueue = async () => {
       }
       // grab the latest track link from the array of unfulfilled rewards
       latestReward = data.data[data.data.length - 1].user_input
+      // grab the latest username from the array of unfulfilled rewards
+      latestUsername = data.data[data.data.length - 1].user_name
       // check if the requester is blacklisted
       if (user.blacklist.includes(data.data[data.data.length - 1].user_name)) {
-        twitchClient.say(process.env.TWITCH_USERNAME, `Sorry, ${data.data[data.data.length - 1].user_name} is blacklisted.`)
+        twitchClient.say(process.env.TWITCH_USERNAME, `Sorry, ${latestUsername} is blacklisted.`)
         return
       }
 
@@ -93,8 +97,15 @@ const addToSpotifyQueue = async () => {
 
       // check if the link is not a track link
       if (!trackId.includes('spotify:track:')) {
-        twitchClient.say(process.env.TWITCH_USERNAME, 'Sorry, that is not a track link.')
+        const searchResult = await searchSong(latestReward)
+        trackId = searchResult
+        addToQueue(trackId, latestUsername)
         return
+      }
+
+      // if link doesnt have a ? in it, it means it doesnt have any query params
+      if (!newLink.includes('?')) {
+        trackId = newLink
       }
 
       // get only the track id from the link
@@ -117,8 +128,7 @@ const addToSpotifyQueue = async () => {
         )
         return
       }
-
-      addToQueue(trackId)
+      addToQueue(trackId, latestUsername)
     }
   } catch (error) {
     console.log(error)

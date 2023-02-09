@@ -53,7 +53,6 @@ const {
   eventSubListCommand,
   rewardsCommand,
   dumpEventSubsCommand,
-  searchSongCommand,
   createEventSubCommand,
   createDefaultChannelRewards,
   getStreamerData,
@@ -66,7 +65,6 @@ currentSongCommand()
 eventSubListCommand()
 rewardsCommand()
 dumpEventSubsCommand()
-searchSongCommand()
 createEventSubCommand()
 createDefaultChannelRewards()
 getStreamerData()
