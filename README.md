@@ -319,18 +319,24 @@ https://5d0b-123-456-789-123.ngrok.io
 <br /> <br />
 # <div id="commands">Twitch Chat Commands</div>
 - Streamer Commands
-  - `!defaultrewards` - Create the default channel rewards
+  - `!dr` - Create the default channel rewards
   - `!ces` - Create Event Subscriptions
   - `!des` - Delete Event Subscriptions
-  - `!dr` - Display Reward IDs
   - `!me` - Display your user information
   - `!blacklist (username)` - Blacklist a user from queueing songs
   - `!unblacklist (username)` - Unblacklist a user from queueing songs
   - `!rewards` - Display the channel rewards
-  - `!songduration (seconds)` - Block songs that are longer than the specified duration
+  - `!sd (seconds)` - Block songs that are longer than the specified duration
 - Viewer Commands
   - `!np` - Display the currently playing song
   - `!ss (song name)` - Search for a song (top 5 results will be displayed)
+  - `!atp (playlist name) (song name)` - Add a song to a playlist
+  - `rfp (playlist name) (song name)` - Remove a song from a playlist
+  - `cp (playlist name)` - Clear all songs from a playlist
+  - `!dp (playlist name)` - Delete a playlist
+  - `!sp` - Display all playlists for the user
+  - `!vp (playlist name)` - Display all songs in a playlist
+
 <br /><br /> 
 
 
