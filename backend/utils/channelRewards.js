@@ -1,6 +1,7 @@
 const User = require('../models/User')
 const twitchUtils = require('../utils/twitchUtils')
-const { addToQueue, skipSong, changeVolume, searchSong } = require('../utils/spotifyUtils')
+const { addToQueue, skipSong, changeVolume, searchSong, getTrackLength, playPlaylist } = require('../utils/spotifyUtils')
+const { getTrack } = require('../utils/tmiUtils')
 const { setupTwitchClient } = require('./tmiSetup')
 const twitchClient = setupTwitchClient()
 
@@ -50,7 +51,6 @@ const addToSpotifyQueue = async () => {
     let after = ''
     let latestReward = ''
     let latestUsername = ''
-    let data = []
     while (hasMore) {
       const res = await fetch(
         `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID_SPOTIFY}&status=UNFULFILLED&first=50&after=${after}`,
@@ -63,7 +63,7 @@ const addToSpotifyQueue = async () => {
           },
         }
       )
-      data = await res.json()
+      const data = await res.json()
       // if there are no more redemptions, break out of the loop
       if (data.data.length === 0) {
         hasMore = false
@@ -87,15 +87,38 @@ const addToSpotifyQueue = async () => {
     if (latestReward) {
       // remove the https://open.spotify.com/track/ from the link
       let newLink = latestReward.replace('https://open.spotify.com/track/', 'spotify:track:')
+      console.log('new link: ', newLink)
       // remove the ?si=... from the link
-      let trackId = newLink.substring(0, newLink.indexOf('?'))
+      if (newLink.includes('?si=')) {
+        newLink = newLink.substring(0, newLink.indexOf('?si='))
+      }
 
       // check if the link is not a track link
-      if (!trackId.includes('spotify:track:')) {
-        const searchResult = await searchSong(latestReward)
-        trackId = searchResult
-        addToQueue(trackId, latestUsername)
-        return
+      if (!newLink.includes('spotify:track:')) {
+        const songResult = await searchSong(latestReward)
+        if (!songResult) {
+          return
+        } else {
+          const trackId = songResult.substring(songResult.lastIndexOf(':') + 1)
+          const track = await getTrack(trackId)
+
+          // get only the track id from the link
+          const trackLength = await getTrackLength(track.uri)
+          console.log('track length: ', trackLength)
+
+          // check if the song is too long to be added to the queue
+          if (trackLength > user.songDurationLimit) {
+            twitchClient.say(
+              process.env.TWITCH_USERNAME,
+              `Sorry, that song is too long. The max duration is ${(user.songDurationLimit / 60000).toFixed(1)} minutes.`
+            )
+            return
+          }
+
+          addToQueue(track.uri, latestUsername)
+          twitchClient.say(process.env.TWITCH_USERNAME, `Added ${latestUsername}'s song to the queue.`)
+          return
+        }
       }
 
       // if link doesnt have a ? in it, it means it doesnt have any query params
@@ -103,26 +126,20 @@ const addToSpotifyQueue = async () => {
         trackId = newLink
       }
 
-      // get only the track id from the link
-      const trackIdOnly = trackId.substring(trackId.lastIndexOf(':') + 1)
+      // get the track length
+      const trackLength = await getTrackLength(trackId)
+      console.log('track length: ', trackLength)
 
-      // check length of song and return if it is longer than 10 minutes
-      const getTrackLength = await fetch(`https://api.spotify.com/v1/tracks/${trackIdOnly}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${user.spotifyAccessToken}`,
-        },
-      })
-      
-      const trackLength = await getTrackLength.json()
-      console.log('user.songDurationLimit', user.songDurationLimit)
-      if (trackLength.duration_ms > user.songDurationLimit) {
+      // check if the song is too long to be added to the queue
+      if (trackLength > user.songDurationLimit) {
         twitchClient.say(
           process.env.TWITCH_USERNAME,
           `Sorry, that song is too long. The max duration is ${(user.songDurationLimit / 60000).toFixed(1)} minutes.`
         )
         return
       }
+
+      twitchClient.say(process.env.TWITCH_USERNAME, `Added ${latestUsername}'s song to the queue.`)
       addToQueue(trackId, latestUsername)
     }
   } catch (error) {
@@ -177,9 +194,55 @@ const changeSpotifyVolume = async () => {
   }
 }
 
+const playUserPlaylist = async () => {
+  console.log('play user playlist')
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
+  try {
+    let hasMore = true
+    let after = ''
+    let latestReward = ''
+    while (hasMore) {
+      const res = await fetch(
+        `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID_PLAY_PLAYLIST}&status=UNFULFILLED&first=50&after=${after}`,
+        {
+          method: 'GET',
+          headers: {
+            'Client-ID': process.env.TWITCH_CLIENT_ID,
+            Authorization: `Bearer ${user.twitchAccessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      const data = await res.json()
+
+      // if there are no more redemptions, break out of the loop
+      if (data.data.length === 0) {
+        hasMore = false
+        console.log('No more redemptions.')
+        break
+      }
+
+      // grab the latest track link from the array of unfulfilled rewards
+      latestReward = data.data[data.data.length - 1].user_input
+      latestUsername = data.data[data.data.length - 1].user_name
+      hasMore = data.pagination.cursor !== null
+      after = data.pagination.cursor
+
+      if (latestReward) {
+        const playlist = data.data[data.data.length - 1].user_input
+        console.log(playlist)
+        playPlaylist(latestUsername, playlist)
+      }
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 module.exports = {
   incrementCost,
   addToSpotifyQueue,
   skipSpotifySong,
   changeSpotifyVolume,
+  playUserPlaylist,
 }

@@ -53,6 +53,11 @@ router.post('/twitch/eventsub', async (req, res) => {
           channelRewards.changeSpotifyVolume()
           res.sendStatus(204)
           break
+        case process.env.TWITCH_REWARD_ID_PLAY_PLAYLIST:
+          console.log(`Received ${notification.event.reward.title}`)
+          channelRewards.playUserPlaylist()
+          res.sendStatus(204)
+          break
         default:
           break
       }

@@ -93,7 +93,9 @@ const getAllRewards = async () => {
       }
     )
     const data = await res.json()
-    console.log(data)
+    data.data.forEach((reward) => {
+      console.log(reward.title, reward.id)
+    })
   } catch (error) {
     console.log(error)
   }

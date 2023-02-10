@@ -10,6 +10,7 @@ const {
   deletePlaylist,
   showPlaylists,
   viewPlaylist,
+  playPlaylist,
 } = require('./spotifyUtils')
 const User = require('../models/User')
 
@@ -125,6 +126,7 @@ const createEventSubCommand = () => {
       createEventSub(process.env.TWITCH_REWARD_ID_SKIP_SONG)
       createEventSub(process.env.TWITCH_REWARD_ID_VOLUME)
       createEventSub(process.env.TWITCH_REWARD_ID_PENNY)
+      createEventSub(process.env.TWITCH_REWARD_ID_PLAY_PLAYLIST)
     }
   })
 }
@@ -194,14 +196,24 @@ const createDefaultChannelRewards = () => {
         false,
         0
       )
-      createReward('Song Submission', 'Submit a spotify *song link* directly to the queue! ', 250, '#392e5c', true, true, 30)
+      createReward('Song Submission', 'Submit a spotify *song link* directly to the queue! ', 250, '#392e5c', true, true, 30),
+        createReward(
+          'Queue a Whole Playlist',
+          'Submit the playlist name that you made with this bot! All songs in the playlist will be added to the queue. ',
+          30000,
+          '#392e5c',
+          true,
+          true,
+          3600
+        )
     }
   })
 }
 
 let maxDuration = 600000
 
-const songDurationCommand = () => {
+const songDurationCommand = async () => {
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
   twitchClient.on('message', (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
@@ -211,13 +223,17 @@ const songDurationCommand = () => {
         maxDuration = newDuration * 1000 // convert to milliseconds
         updateSongDurationLimit(maxDuration)
         twitchClient.say(process.env.TWITCH_USERNAME, `Song duration has been set to ${newDuration} seconds.`)
-      } else {
-        twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a valid number of seconds.`)
+      } else if (!newDuration) {
+        twitchClient.say(
+          process.env.TWITCH_USERNAME,
+          `Song duration is currently set to ${user.songDurationLimit / 1000} seconds.`
+        )
       }
     }
   })
 }
 
+// add a song to a playlist by name or link
 const addToPlaylistCommand = async () => {
   await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
@@ -277,6 +293,7 @@ const addToPlaylistCommand = async () => {
   })
 }
 
+// remove a song from the specified playlist
 const removeSongFromPlaylistCommand = async () => {
   await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
@@ -331,6 +348,7 @@ let isClearingPlaylist = false
 let timeout
 let playlistToClear
 
+// clear all songs from a playlist
 const clearPlaylistCommand = async () => {
   await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
@@ -375,6 +393,7 @@ const clearPlaylistCommand = async () => {
 let isDeletingPlaylist = false
 let playlistToDelete
 
+// delete playlist command
 const deletePlaylistCommand = async () => {
   await refreshMiddleware()
   let timeout
@@ -418,6 +437,7 @@ const deletePlaylistCommand = async () => {
   })
 }
 
+// show all playlists for a user
 const showPlaylistsCommand = async () => {
   await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
@@ -429,14 +449,17 @@ const showPlaylistsCommand = async () => {
   })
 }
 
+// view what songs are in a playlist
 const viewPlaylistCommand = async () => {
   await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
     const playlist = message.slice(1).split(' ')[1]
-    if (command === 'viewplaylist' || command === 'vp') {
+    if (command === 'viewplaylist' || (command === 'vp' && playlist)) {
       await viewPlaylist(tags.username, playlist)
+    } else if (command === 'viewplaylist' || (command === 'vp' && !playlist)) {
+      twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a playlist name.`)
     }
   })
 }
@@ -458,4 +481,5 @@ module.exports = {
   deletePlaylistCommand,
   showPlaylistsCommand,
   viewPlaylistCommand,
+  getTrack,
 }

@@ -110,7 +110,7 @@ const addToQueue = async (uri, username) => {
     console.log('addToQueue response status:', res.status)
 
     if (res.status === 204) {
-      twitchClient.say(process.env.TWITCH_USERNAME, `@${username}'s song has been added to the queue!`)
+      return res
     } else {
       try {
         const data = await res.json()
@@ -354,20 +354,40 @@ const playPlaylist = async (twitchUsername, playlistName) => {
   const viewer = await Viewer.findOne({ twitchUsername })
 
   if (viewer) {
-    // loop through the viewer's playlists and check if the playlist already exists
+    // find the playlist
     const playlist = viewer.playlists.find((p) => p.playlistName === playlistName)
 
     if (playlist) {
-      // loop through the songs in the playlist and add them to the queue
+      // loop through the song links in the playlist and add them to the queue
       playlist.songs.forEach((song) => {
-        addToQueue(song.link, song.name, song.artist)
+        addToQueue(song.link, twitchUsername)
       })
+      twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, ${playlist.songs.length} songs were added to the queue!`)
       return
     }
     twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have a playlist named ${playlistName}!`)
     return
   }
   twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have any playlists!`)
+}
+
+const getTrackLength = async (trackLink) => {
+  if (typeof trackLink !== 'string') {
+    console.error('trackLink must be a string')
+    return
+  }
+  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
+  const trackIdOnly = trackLink.substring(trackLink.lastIndexOf(':') + 1)
+
+  const getTrackLength = await fetch(`https://api.spotify.com/v1/tracks/${trackIdOnly}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${user.spotifyAccessToken}`,
+    },
+  })
+
+  const trackLength = await getTrackLength.json()
+  return trackLength.duration_ms
 }
 
 module.exports = {
@@ -384,4 +404,6 @@ module.exports = {
   deletePlaylist,
   showPlaylists,
   viewPlaylist,
+  playPlaylist,
+  getTrackLength,
 }
