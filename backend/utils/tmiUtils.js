@@ -10,7 +10,6 @@ const {
   deletePlaylist,
   showPlaylists,
   viewPlaylist,
-  playPlaylist,
 } = require('./spotifyUtils')
 const User = require('../models/User')
 
@@ -163,11 +162,15 @@ const eventSubListCommand = () => {
 }
 
 const currentSongCommand = () => {
-  twitchClient.on('message', (channel, tags, message, self) => {
+  twitchClient.on('message', async (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
     if (command === 'currentsong' || command === 'cs' || command === 'song' || command === 'nowplaying' || command === 'np') {
-      currentSong()
+      const res = await currentSong()
+      twitchClient.say(
+        process.env.TWITCH_USERNAME,
+        `Now playing: ${res.item.name} by: ${res.item.artists[0].name} Link: ${res.item.external_urls.spotify}`
+      )
     }
   })
 }
@@ -252,7 +255,7 @@ const addToPlaylistCommand = async () => {
         twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a spotify song link or name.`)
         return
       }
-      if (playlist && song) {
+      if (playlist && song && song !== 'currentsong') {
         // if song is a spotify link, add it to the playlist
         if (song.includes('https://open.spotify.com/track/') && song.includes('?si')) {
           newLink = song.replace('https://open.spotify.com/track/', 'spotify:track:')
@@ -286,6 +289,10 @@ const addToPlaylistCommand = async () => {
           addTracksToPlaylist(tags.username, playlist, songResult, track.name, track.artists[0].name)
           return
         }
+      } else if (playlist && song === 'currentsong') {
+        const res = await currentSong()
+        console.log(res.item.name, res.item.album.artists[0].name)
+        addTracksToPlaylist(tags.username, playlist, res.item.uri, res.item.name, res.item.album.artists[0].name)
       } else {
         twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a valid song.`)
       }

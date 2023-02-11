@@ -2,9 +2,6 @@ const express = require('express')
 const router = express.Router()
 const crypto = require('crypto')
 
-// import utils
-const channelRewards = require('../utils/channelRewards')
-
 // notifaction request headers for twitch
 const TWITCH_MESSAGE_ID = 'Twitch-Eventsub-Message-Id'.toLowerCase()
 const TWITCH_MESSAGE_TIMESTAMP = 'Twitch-Eventsub-Message-Timestamp'.toLowerCase()
@@ -17,6 +14,8 @@ const MESSAGE_TYPE_NOTIFICATION = 'notification'
 const MESSAGE_TYPE_REVOCATION = 'revocation'
 
 const HMAC_PREFIX = 'sha256='
+
+const rewardHandler = require('../utils/notificationHandler')
 
 router.post('/twitch/eventsub', async (req, res) => {
   console.log('eventsub route hit')
@@ -32,35 +31,8 @@ router.post('/twitch/eventsub', async (req, res) => {
 
     // check if message type is a notification
     if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {
-      switch (notification.event.reward.id) {
-        case process.env.TWITCH_REWARD_ID_SPOTIFY:
-          console.log(`Received ${notification.event.reward.title}`)
-          channelRewards.addToSpotifyQueue()
-          res.sendStatus(204)
-          break
-        case process.env.TWITCH_REWARD_ID_PENNY:
-          console.log(`Received ${notification.event.reward.title}`)
-          channelRewards.incrementCost()
-          res.sendStatus(204)
-          break
-        case process.env.TWITCH_REWARD_ID_SKIP_SONG:
-          console.log(`Received ${notification.event.reward.title}`)
-          channelRewards.skipSpotifySong()
-          res.sendStatus(204)
-          break
-        case process.env.TWITCH_REWARD_ID_VOLUME:
-          console.log(`Received ${notification.event.reward.title}`)
-          channelRewards.changeSpotifyVolume()
-          res.sendStatus(204)
-          break
-        case process.env.TWITCH_REWARD_ID_PLAY_PLAYLIST:
-          console.log(`Received ${notification.event.reward.title}`)
-          channelRewards.playUserPlaylist()
-          res.sendStatus(204)
-          break
-        default:
-          break
-      }
+      rewardHandler.handleReward(notification.event.reward.id, notification)
+      res.sendStatus(204)
     } else if (MESSAGE_TYPE_VERIFICATION === req.headers[MESSAGE_TYPE]) {
       res.status(200).send(notification.challenge)
     } else if (MESSAGE_TYPE_REVOCATION === req.headers[MESSAGE_TYPE]) {

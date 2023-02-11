@@ -119,15 +119,15 @@ const addToQueue = async (uri, username) => {
         console.error(`An error occurred while parsing the JSON data: ${error}`)
       }
     }
-    return res
-  } catch (error) {
-    console.log(error)
-    if (error.status === 404) {
+    if (res.status === 404) {
       twitchClient.say(
         process.env.TWITCH_USERNAME,
         'No active device found. The streamer must be playing music to add a song to the queue.'
       )
     }
+    return res
+  } catch (error) {
+    console.log(error)
   }
 }
 
@@ -163,11 +163,7 @@ const currentSong = async () => {
       },
     })
     const data = await res.json()
-    console.log(data)
-    twitchClient.say(
-      process.env.TWITCH_USERNAME,
-      `Now playing: ${data.item.name} by: ${data.item.artists[0].name} Link: ${data.item.external_urls.spotify}`
-    )
+    return data
   } catch (error) {
     console.log(error)
   }
@@ -280,6 +276,7 @@ const clearPlaylist = async (twitchUsername, playlistName) => {
   }
   twitchClient.say(process.env.TWITCH_USERNAME, `@${twitchUsername}, you don't have any playlists!`)
 }
+
 const deletePlaylist = async (twitchUsername, playlistName) => {
   const viewer = await Viewer.findOne({ twitchUsername })
 
