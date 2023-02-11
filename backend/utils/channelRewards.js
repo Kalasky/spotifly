@@ -1,6 +1,14 @@
 const User = require('../models/User')
 const twitchUtils = require('../utils/twitchUtils')
-const { addToQueue, skipSong, changeVolume, searchSong, getTrackLength, playPlaylist } = require('../utils/spotifyUtils')
+const {
+  addToQueue,
+  skipSong,
+  changeVolume,
+  searchSong,
+  getTrackLength,
+  playPlaylist,
+  queueStatus,
+} = require('../utils/spotifyUtils')
 const { getTrack } = require('../utils/tmiUtils')
 const { setupTwitchClient } = require('./tmiSetup')
 const twitchClient = setupTwitchClient()
@@ -115,8 +123,11 @@ const addToSpotifyQueue = async () => {
             return
           }
 
-          addToQueue(track.uri, latestUsername)
-          twitchClient.say(process.env.TWITCH_USERNAME, `Added ${latestUsername}'s song to the queue.`)
+          const res = await addToQueue(track.uri, latestUsername)
+          // if no active device is found, do not send the message
+          if (res.status !== 404) {
+            twitchClient.say(process.env.TWITCH_USERNAME, `Added ${latestUsername}'s song to the queue.`)
+          }
           return
         }
       }
@@ -139,8 +150,12 @@ const addToSpotifyQueue = async () => {
         return
       }
 
-      twitchClient.say(process.env.TWITCH_USERNAME, `Added ${latestUsername}'s song to the queue.`)
-      addToQueue(trackId, latestUsername)
+      const res = await addToQueue(trackId, latestUsername)
+      console.log('res: ', res.status)
+      // if no active device is found, do not send the message
+      if (res.status !== 404) {
+        twitchClient.say(process.env.TWITCH_USERNAME, `Added ${latestUsername}'s song to the queue.`)
+      }
     }
   } catch (error) {
     console.log(error)
