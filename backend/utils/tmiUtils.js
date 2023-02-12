@@ -238,7 +238,6 @@ const songDurationCommand = async () => {
 
 // add a song to a playlist by name or link
 const addToPlaylistCommand = async () => {
-  await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
     let trackId
     let newLink
@@ -247,6 +246,7 @@ const addToPlaylistCommand = async () => {
     const playlist = message.slice(1).split(' ')[1]
     const song = message.slice(1).split(' ').slice(2).join(' ')
     if (command === 'addtoplaylist' || command === 'atp') {
+      await refreshMiddleware()
       if (!playlist) {
         twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a playlist name.`)
         return
@@ -302,13 +302,13 @@ const addToPlaylistCommand = async () => {
 
 // remove a song from the specified playlist
 const removeSongFromPlaylistCommand = async () => {
-  await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
     const playlist = message.slice(1).split(' ')[1]
     const song = message.slice(1).split(' ').slice(2).join(' ')
     if (command === 'removefromplaylist' || command === 'rfp') {
+      await refreshMiddleware()
       if (!playlist) {
         twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a playlist name.`)
         return
@@ -357,12 +357,12 @@ let playlistToClear
 
 // clear all songs from a playlist
 const clearPlaylistCommand = async () => {
-  await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
     const playlist = message.slice(1).split(' ')[1]
     if (command === 'clearplaylist' || command === 'cp') {
+      await refreshMiddleware()
       if (!playlist) {
         twitchClient.say(process.env.TWITCH_USERNAME, 'Please enter a playlist name.')
         return
@@ -402,12 +402,12 @@ let playlistToDelete
 
 // delete playlist command
 const deletePlaylistCommand = async () => {
-  await refreshMiddleware()
   let timeout
   twitchClient.on('message', async (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
     if (command === 'deleteplaylist' || command === 'dp') {
+      await refreshMiddleware()
       const playlist = message.slice(1).split(' ')[1]
       if (!playlist) {
         twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a playlist name.`)
@@ -446,11 +446,11 @@ const deletePlaylistCommand = async () => {
 
 // show all playlists for a user
 const showPlaylistsCommand = async () => {
-  await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
     if (command === 'showplaylists' || command === 'sp') {
+      await refreshMiddleware()
       await showPlaylists(tags.username)
     }
   })
@@ -458,12 +458,12 @@ const showPlaylistsCommand = async () => {
 
 // view what songs are in a playlist
 const viewPlaylistCommand = async () => {
-  await refreshMiddleware()
   twitchClient.on('message', async (channel, tags, message, self) => {
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
     const playlist = message.slice(1).split(' ')[1]
     if (command === 'viewplaylist' || (command === 'vp' && playlist)) {
+      await refreshMiddleware()
       await viewPlaylist(tags.username, playlist)
     } else if (command === 'viewplaylist' || (command === 'vp' && !playlist)) {
       twitchClient.say(process.env.TWITCH_USERNAME, `Please enter a playlist name.`)
