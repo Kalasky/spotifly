@@ -16,14 +16,12 @@ const mongoose = require('mongoose')
 
 // express imports
 const express = require('express')
-const cors = require('cors')
 const PORT = process.env.PORT || 8888
 const app = express()
 
 // middleware
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
-app.use(cors()) // enable CORS for all routes
 app.use(express.raw({ type: 'application/json' }))
 
 // routes
