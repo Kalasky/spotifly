@@ -243,7 +243,7 @@ const addToPlaylistCommand = async () => {
     let newLink
     if (self) return
     const command = message.slice(1).split(' ')[0].toLowerCase()
-    const playlist = message.slice(1).split(' ')[1]
+    const playlist = message.slice(1).split(' ')[1].toLowerCase()
     const song = message.slice(1).split(' ').slice(2).join(' ')
     if (command === 'addtoplaylist' || command === 'atp') {
       await refreshMiddleware()

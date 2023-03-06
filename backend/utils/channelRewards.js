@@ -195,6 +195,12 @@ const changeSpotifyVolume = async () => {
 
       // grab the latest track link from the array of unfulfilled rewards
       latestReward = data.data[data.data.length - 1].user_input
+
+      if (user.blacklist.includes(data.data[data.data.length - 1].user_name)) {
+        twitchClient.say(process.env.TWITCH_USERNAME, `Sorry, ${latestUsername} is blacklisted.`)
+        return
+      }
+
       hasMore = data.pagination.cursor !== null
       after = data.pagination.cursor
 
@@ -240,6 +246,12 @@ const playUserPlaylist = async () => {
       // grab the latest track link from the array of unfulfilled rewards
       latestReward = data.data[data.data.length - 1].user_input
       latestUsername = data.data[data.data.length - 1].user_name
+
+      if (user.blacklist.includes(data.data[data.data.length - 1].user_name)) {
+        twitchClient.say(process.env.TWITCH_USERNAME, `Sorry, ${latestUsername} is blacklisted.`)
+        return
+      }
+
       hasMore = data.pagination.cursor !== null
       after = data.pagination.cursor
 
