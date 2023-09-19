@@ -6,8 +6,6 @@ const {
   changeVolume,
   searchSong,
   getTrackLength,
-  playPlaylist,
-  queueStatus,
 } = require('../utils/spotifyUtils')
 const { getTrack } = require('../utils/tmiUtils')
 const { setupTwitchClient } = require('./tmiSetup')
@@ -215,61 +213,9 @@ const changeSpotifyVolume = async () => {
   }
 }
 
-const playUserPlaylist = async () => {
-  console.log('play user playlist')
-  const user = await User.findOne({ twitchUsername: process.env.TWITCH_USERNAME })
-  try {
-    let hasMore = true
-    let after = ''
-    let latestReward = ''
-    while (hasMore) {
-      const res = await fetch(
-        `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${process.env.TWITCH_REWARD_ID_PLAY_PLAYLIST}&status=UNFULFILLED&first=50&after=${after}`,
-        {
-          method: 'GET',
-          headers: {
-            'Client-ID': process.env.TWITCH_CLIENT_ID,
-            Authorization: `Bearer ${user.twitchAccessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-      const data = await res.json()
-
-      // if there are no more redemptions, break out of the loop
-      if (data.data.length === 0) {
-        hasMore = false
-        console.log('No more redemptions.')
-        break
-      }
-
-      // grab the latest track link from the array of unfulfilled rewards
-      latestReward = data.data[data.data.length - 1].user_input
-      latestUsername = data.data[data.data.length - 1].user_name
-
-      if (user.blacklist.includes(data.data[data.data.length - 1].user_name)) {
-        twitchClient.say(process.env.TWITCH_USERNAME, `Sorry, ${latestUsername} is blacklisted.`)
-        return
-      }
-
-      hasMore = data.pagination.cursor !== null
-      after = data.pagination.cursor
-
-      if (latestReward) {
-        const playlist = data.data[data.data.length - 1].user_input
-        console.log(playlist)
-        playPlaylist(latestUsername, playlist)
-      }
-    }
-  } catch (error) {
-    console.log(error)
-  }
-}
-
 module.exports = {
   incrementCost,
   addToSpotifyQueue,
   skipSpotifySong,
   changeSpotifyVolume,
-  playUserPlaylist,
 }

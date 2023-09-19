@@ -18,10 +18,6 @@ module.exports.handleReward = (rewardId, notification) => {
       console.log(`Received ${notification.event.reward.title}`);
       channelRewards.changeSpotifyVolume();
       break;
-    case process.env.TWITCH_REWARD_ID_PLAY_PLAYLIST:
-      console.log(`Received ${notification.event.reward.title}`);
-      channelRewards.playUserPlaylist();
-      break;
     default:
       break;
   }

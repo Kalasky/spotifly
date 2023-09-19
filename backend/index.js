@@ -57,12 +57,6 @@ const {
   songDurationCommand,
   blacklistCommand,
   unblacklistCommand,
-  addToPlaylistCommand,
-  removeSongFromPlaylistCommand,
-  clearPlaylistCommand,
-  deletePlaylistCommand,
-  showPlaylistsCommand,
-  viewPlaylistCommand,
 } = require('./utils/tmiUtils')
 
 currentSongCommand()
@@ -75,9 +69,3 @@ getStreamerData()
 songDurationCommand()
 blacklistCommand()
 unblacklistCommand()
-addToPlaylistCommand()
-removeSongFromPlaylistCommand()
-clearPlaylistCommand()
-deletePlaylistCommand()
-showPlaylistsCommand()
-viewPlaylistCommand()

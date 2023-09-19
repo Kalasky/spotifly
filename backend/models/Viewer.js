@@ -4,18 +4,6 @@ const mongoose = require('mongoose')
 const ViewerSchema = new mongoose.Schema(
   {
     twitchUsername: String,
-    playlists: [
-      {
-        playlistName: String,
-        songs: [
-          {
-            link: String,
-            name: String,
-            artist: String,
-          },
-        ],
-      },
-    ],
   },
   { timestamps: true }
 )

@@ -19,7 +19,6 @@ router.get('/spotify/login', async (req, res) => {
       user-follow-modify
       playlist-read-private
       playlist-modify-public`
-  // redirect to spotify login page with the client id, redirect uri, and scope as query parameters
   res.redirect(
     307,
     'https://accounts.spotify.com/authorize?' +
@@ -51,10 +50,10 @@ router.get('/spotify/callback', async (req, res) => {
       'Content-Type': 'application/x-www-form-urlencoded',
       Accept: 'application/json',
     },
-    body: spotifyUtils.encodeFormData(body), // encode the data object into a query string
+    body: spotifyUtils.encodeFormData(body), 
   })
   const tokenData = await tokenReponse.json()
-  // extract access token and refresh token from response
+
   accessToken = tokenData.access_token
   refreshToken = tokenData.refresh_token
 
@@ -78,14 +77,13 @@ router.get('/spotify/callback', async (req, res) => {
     )
     res.redirect('http://localhost:8888')
   } else {
-    // if user is not in the database, create a new user
     const newUser = new User({
       spotifyUsername: process.env.SPOTIFY_USERNAME,
       spotifyAccessToken: accessToken,
       spotifyRefreshToken: refreshToken,
       twitchUsername: process.env.TWITCH_USERNAME,
       twitchAccessToken: '', // will be updated later by the twitch login
-      twitchRefreshToken: '', /// will be updated later by the twitch login
+      twitchRefreshToken: '', // will be updated later by the twitch login
     })
     await newUser.save()
 
