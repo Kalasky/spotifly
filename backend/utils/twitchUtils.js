@@ -168,7 +168,7 @@ const createEventSub = async (reward_id) => {
     }),
   })
   const data = await res.json()
-  console.log(data.data)
+  console.log(data)
 }
 
 // delete a webhook eventsub subscription for a specific channel reward

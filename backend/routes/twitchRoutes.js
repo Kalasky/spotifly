@@ -61,7 +61,6 @@ router.get('/twitch/callback', async (req, res) => {
     )
     res.redirect('http://localhost:8888')
   } else {
-    // if user is not in the database, create a new user
     const newUser = new User({
       spotifyUsername: process.env.SPOTIFY_USERNAME,
       spotifyAccessToken: '', // will be updated later by the spotify login
