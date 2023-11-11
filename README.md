@@ -329,13 +329,6 @@ https://5d0b-123-456-789-123.ngrok.io
   - `!sd (seconds)` - Block songs that are longer than the specified duration
 - Viewer Commands
   - `!np` - Display the currently playing song
-  - `!atp (playlist name) (song name)` - Add a song to a playlist
-  - `!atp (playlist name) currentsong` - Add the currently playing song to a playlist
-  - `rfp (playlist name) (song name)` - Remove a song from a playlist
-  - `cp (playlist name)` - Clear all songs from a playlist
-  - `!dp (playlist name)` - Delete a playlist
-  - `!sp` - Display all playlists for the user
-  - `!vp (playlist name)` - Display all songs in a playlist
 
 <br /><br /> 
 
